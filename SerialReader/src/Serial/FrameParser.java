@@ -24,10 +24,10 @@ public class FrameParser {
 	{
 		byte[] b = new byte[]{data.get(0)};
 		
-		for(int i = 0 ; i < data.size();i++){
-			System.out.print(byteToString(data.get(i)));
-		}
-		System.out.println();
+//		for(int i = 0 ; i < data.size();i++){
+//			System.out.print(byteToString(data.get(i)));
+//		}
+//		System.out.println();
 		String type;
 		//build a frame based on the packet encoding
 		
