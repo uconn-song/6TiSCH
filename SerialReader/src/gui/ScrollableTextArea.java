@@ -21,7 +21,7 @@ public class ScrollableTextArea extends JScrollPane implements MouseListener
 				this.setVerticalScrollBarPolicy(vBar);
 				setVisible(true);
 				_textArea.setVisible(true);
-			
+				
 				
 			}
 		
@@ -41,7 +41,7 @@ public class ScrollableTextArea extends JScrollPane implements MouseListener
 				if(pause==0){
 				_textArea.setCaretPosition(_textArea.getText().length());
 				}else{
-	
+					
 				}
 			}
 
