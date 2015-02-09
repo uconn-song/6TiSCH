@@ -1,0 +1,72 @@
+
+
+Neighbor table entry format:
+when transferred over serial debugNeighborEntry_t is sent inside of an S Frame. This entry consists of the following:
+===============STRUCTURE DEFS==================
+BEGIN_PACK
+typedef struct {
+uint8_t row;
+neighborRow_t neighborEntry;
+} debugNeighborEntry_t;
+END_PACK
+
+
+BEGIN_PACK
+typedef struct {
+bool used;
+uint8_t parentPreference;
+bool stableNeighbor;
+uint8_t switchStabilityCounter;
+open_addr_t addr_64b;
+dagrank_t DAGrank;
+int8_t rssi;
+uint8_t numRx;
+uint8_t numTx;
+uint8_t numTxACK;
+uint8_t numWraps;//number of times the tx counter wraps. can be removed if memory is a restriction. also check openvisualizer then.
+asn_t asn;
+uint8_t joinPrio;
+} neighborRow_t;
+END_PACK
+
+BEGIN_PACK
+typedef struct { // always written big endian, i.e. MSB in addr[0]
+uint8_t type;
+union {
+uint8_t addr_16b[2];
+uint8_t addr_64b[8];
+uint8_t addr_128b[16];
+uint8_t panid[2];
+uint8_t prefix[8];
+};
+} open_addr_t;
+END_PACK
+
+typedef uint16_t dagrank_t;
+BEGIN_PACK
+typedef struct {
+uint8_t byte4;
+uint16_t bytes2and3;
+uint16_t bytes0and1;
+} asn_t;
+END_PACK
+============FUNCTION====================
+//===== debug
+/**
+\brief Triggers this module to print status information, over serial.
+debugPrint_* functions are used by the openserial module to continuously print
+status information about several modules in the OpenWSN stack.
+\returns TRUE if this function printed something, FALSE otherwise.
+*/
+bool debugPrint_neighbors() {
+debugNeighborEntry_t temp;
+neighbors_vars.debugRow=(neighbors_vars.debugRow+1)%MAXNUMNEIGHBORS;
+//integer counter of current row
+temp.row=neighbors_vars.debugRow; 
+//debug row
+temp.neighborEntry=neighbors_vars.neighbors[neighbors_vars.debugRow];
+//treat the debugNeighborEntry_t as a byte array
+openserial_printStatus(STATUS_NEIGHBORS,(uint8_t*)&temp,sizeof(debugNeighborEntry_t));
+return TRUE;
+}
+
