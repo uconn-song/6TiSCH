@@ -4,23 +4,11 @@ package network_model;
 import gui.ControlPanel;
 import gui.GUIManager;
 
-import java.awt.Color;
-import java.awt.GridBagConstraints;
-import java.awt.GridBagLayout;
-import java.awt.Insets;
-import java.util.HashMap;
-import java.util.Scanner;
-
-import javax.swing.JFrame;
-import javax.swing.WindowConstants;
-
+import serial.SerialListener;
 import serial.SerialThread;
-
-
 
 import jssc.SerialPort;
 import jssc.SerialPortException;
-import jssc.SerialPortList;
 
 /**
  *http://www.javaprogrammingforums.com/java-se-api-tutorials/5603-jssc-library-easy-work-serial-ports.html
@@ -34,7 +22,6 @@ public class WSNManager{
 	{
 		_controlPanel = new ControlPanel(this);
 		new GUIManager(_controlPanel);
-		
 	}
   
 	public static void main(String[] args) throws SerialPortException {   
@@ -42,14 +29,63 @@ public class WSNManager{
     }
     
 
+	/**Send message to the DAG root
+	 * @param message
+	 * @return
+	 */
+	public boolean send(byte[] message){
+		return _LBRConnection.send(message);
+	}
+	
+	/** Open new connection on the given port name
+	 */
+	public void addConnection(String portName) {
+		try {
+			SerialPort p = new SerialPort(portName);
+			p.openPort();
+			p.setParams(115200,//115200 or 38400
+			        SerialPort.DATABITS_8,
+			        SerialPort.STOPBITS_1,
+			        SerialPort.PARITY_NONE);
+			SerialThread t = new SerialThread(p);
+			t.start();
+			_LBRConnection= new LBRConnection(p,t);
+			//register components to listen to serial data
+			addComponentsListeningOnSerial();
+			
+		} catch (SerialPortException e) {
+			e.printStackTrace();
+		}
+	}
+	
+	/**
+	 * Here is where we register components to listen to the data received from LBR
+	 * This method is called when adding a connection to a serial port.
+	 */
+	private void addComponentsListeningOnSerial() {
+		_LBRConnection.addSerialListener("_controlPanel", _controlPanel);
+	}
 
+	public void closeConnection() {
+		_LBRConnection.ShutDown();
+	}
 
 	
+	/**
+	 * return the port name of the currently open application
+	 * @return
+	 */
+	public String getPortName() {
+		try{
+		return _LBRConnection.getPort().getPortName();
+		}catch(NullPointerException e){
+			return "No ports opened";
+		}
+	}
 	
-		
-		
-		
-		//Class to link thread which listens to and sends to LBR, and port which it is associated with
+
+	//==============Support Class===============
+	//Class to link thread which listens to and sends to LBR, and port which it is associated with
 		private class LBRConnection{
 			private SerialPort _port;
 			private SerialThread _thread;
@@ -61,11 +97,14 @@ public class WSNManager{
 				return _thread;
 			}
 			
-			/**
-			 * 
-			 * @param message as byte array
-			 * @return
-			 */
+			public void addSerialListener(String componentName, SerialListener l){
+				_thread.registerComponent(componentName, l);
+			}
+			
+			public void removeSerialListener(String componentName){
+				_thread.removeComponent(componentName);
+			}
+			
 			public boolean send(byte[] b){
 				return _thread.sendToBuffer(b);
 			}
@@ -81,68 +120,4 @@ public class WSNManager{
 				}
 			}
 		}
-
-
-
-
-
-		/**
-		 * Send message to the DAG root
-		 * @param message
-		 * @return
-		 */
-		public boolean send(byte[] message){
-			return _LBRConnection.send(message);
-		}
-	
-		
-		/** Open new connection on the given port name
-		 */
-		public void addConnection(String portName) {
-			try {
-				SerialPort p = new SerialPort(portName);
-				p.openPort();
-				setBaudrate(115200,p);
-				SerialThread t = new SerialThread(p);
-				t.start();
-				_LBRConnection= new LBRConnection(p,t);
-			} catch (SerialPortException e) {
-				e.printStackTrace();
-			}
-		}
-
-		public void closeConnection() {
-			_LBRConnection.ShutDown();
-		}
-		
-		
-		private void setBaudrate(int b, SerialPort p){
-			
-			try {
-				p.setParams(b,//115200, //or 38400
-				        SerialPort.DATABITS_8,
-				        SerialPort.STOPBITS_1,
-				        SerialPort.PARITY_NONE);
-				
-			} catch (SerialPortException e) {
-				
-			}	
-		
-		}
-		
-		/**
-		 * return the port name of the currently open application
-		 * @return
-		 */
-		public String getPortName() {
-			try{
-			return _LBRConnection.getPort().getPortName();
-			}catch(NullPointerException e){
-				return "No ports opened";
-			}
-		}
-}
-
-
-
-    
+}  

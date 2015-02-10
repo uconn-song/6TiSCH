@@ -2,6 +2,8 @@ package serial;
 
 import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Iterator;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
@@ -13,19 +15,21 @@ import jssc.SerialPortException;
 
 public class SerialThread extends Thread{
 	private boolean alive = true;
-	private SerialPort serialPort; //from JSSC
+	private SerialPort serialPort;
 	
 	//HDLC assistant holds lower level functions for computing and checking crc conditions
 	private HDLCAssistant _HDLC = new HDLCAssistant();
 	
 	//A packet can only be sent for a very short amount of time after a request
-	//frame has been recieved, so keep a buffer for the next packet to be sent.
+	//frame has been received, so keep a buffer for the next packet to be sent.
 	//this will be checked when a request packet is found.
 	private byte[] _writeBuffer;
 	private Lock _writeBufferLock = new ReentrantLock();
 	private boolean _writeBufferEmpty = true;
-	
 	private ArrayList<Byte> _readBuffer = new ArrayList<Byte>();
+	
+	//A list of components to which serial messages will be sent, these components implement the interface SerialListener
+	private HashMap<String, SerialListener> _listeningComponents = new HashMap<String,SerialListener>();
 	
 	public SerialThread(SerialPort serial) {
 		serialPort = serial;
@@ -56,6 +60,24 @@ public class SerialThread extends Thread{
 		}
 		}
 	
+	/**
+	 * Registering a class implementing SerialListener to receive data frames from the LBR, 
+	 * need to give it a name to remove if necessary
+	 * @param componentName
+	 * @param Name of the component , class implementing SerialListener
+	 */
+	public void registerComponent(String componentName, SerialListener l){
+		_listeningComponents.put(componentName, l);
+	}
+	
+	/**
+	 * remove a component listening on the serial input.
+	 * @param componentName
+	 */
+	public void removeComponent(String componentName){
+		_listeningComponents.remove(componentName);
+	}
+	
 	
 	//===========READ OPERATIONS===========
 	//Check for beginning and end of packet flags, and fill up a buffer of serial
@@ -80,6 +102,10 @@ public class SerialThread extends Thread{
 			//TODO:SEND FRAME TO UPPER LAYERS
 		}else{
 			System.out.println(collectedFrame);
+			Iterator<SerialListener> it = _listeningComponents.values().iterator();
+			while(it.hasNext()){
+				it.next().acceptFrame(collectedFrame);
+			}
 			//TODO: SEND FRAME TO UPPER LAYERS
 		}
 		_readBuffer = new ArrayList<Byte>();
