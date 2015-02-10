@@ -115,8 +115,10 @@ public class SerialPacketTester extends JPanel {
 		}catch(IllegalFormatException e){
 		
 			_console.printString(e.getMessage());
-		}catch(NumberFormatException | ArrayIndexOutOfBoundsException e){
-			_console.printString("Error executing command {" + text+"}");
+		}catch(NumberFormatException e) {
+            _console.printString("Error executing command {" + text + "}");
+        }catch(ArrayIndexOutOfBoundsException e){
+            _console.printString("Error executing command {" + text+"}");
 		} catch (SerialPortException e) {
 			_console.printString(e.getExceptionType() + ": " + e.getMessage());
 		}
