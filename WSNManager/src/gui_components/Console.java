@@ -4,6 +4,7 @@ import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
+import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.KeyEvent;
@@ -45,15 +46,21 @@ public class Console extends JPanel {
 		setFocusable(true);
 
 		GridBagConstraints c = new GridBagConstraints();
+		c.fill = GridBagConstraints.BOTH;
 		// console output
 		c.gridx = 0;
 		c.gridy = 0;
+		c.weightx=1.0;
+		c.ipadx = 5;
+		c.ipady = 5;
+		c.weighty=1.0;
+		c.insets = new Insets(5,5,5,5);
 		_output = new ScrollableTextArea(
 				ScrollableTextArea.VERTICAL_SCROLLBAR_AS_NEEDED,
 				ScrollableTextArea.HORIZONTAL_SCROLLBAR_AS_NEEDED);
 		_output.setVisible(true);
 		_output.setEditable(false);
-		_output.setPreferredSize(new Dimension(650, 150));
+		_output.setPreferredSize(new Dimension(550, 100));
 		this.add(_output, c);
 
 		c.gridy = 1;
@@ -68,11 +75,13 @@ public class Console extends JPanel {
 		c.fill = GridBagConstraints.BOTH;
 		c.gridx = 1;
 		c.gridy = 0;
-		c.ipadx = 40;
+		c.ipadx = 20;
 		c.gridheight = 3;
 		JList<String> j = new JList<String>(commands);
 		ListListener l = new ListListener(j, _consoleInput);
 		j.addListSelectionListener(l);
+		
+		c.weightx=0;
 		add(j, c);
 
 	}
@@ -87,7 +96,7 @@ public class Console extends JPanel {
 	}
 
 	private void setupConsole(GridBagConstraints c) {
-
+		c.weighty=0.0;
 		_consoleInput = new JTextField() {
 			@Override
 			public void addNotify() {
@@ -175,7 +184,7 @@ public class Console extends JPanel {
 				} else if (selected.equals("close all")) {
 					console.setText("close all");
 				} else if (selected.startsWith("close ")) {
-					console.setText("close ");
+					console.setText("close connection");
 				} else {
 					console.setText((String) list.getSelectedValue());
 				}

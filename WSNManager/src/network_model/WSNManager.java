@@ -9,6 +9,7 @@ import serial.SerialThread;
 
 import jssc.SerialPort;
 import jssc.SerialPortException;
+import jssc.SerialPortList;
 
 /**
  *http://www.javaprogrammingforums.com/java-se-api-tutorials/5603-jssc-library-easy-work-serial-ports.html
@@ -22,6 +23,12 @@ public class WSNManager{
 	{
 		_controlPanel = new ControlPanel(this);
 		new GUIManager(_controlPanel);
+		
+		
+		String[] ports = SerialPortList.getPortNames();
+		if(ports.length==1){
+			addConnection(ports[0]);
+		}
 	}
   
 	public static void main(String[] args) throws SerialPortException {   
@@ -38,9 +45,14 @@ public class WSNManager{
 	}
 	
 	/** Open new connection on the given port name
+	 * @throws SerialPortException 
 	 */
-	public void addConnection(String portName) {
-		try {
+	public void addConnection(String portName) throws SerialPortException{
+		try{
+			_LBRConnection.ShutDown();
+		}catch(NullPointerException e){//ensure no connection open
+			}
+		
 			SerialPort p = new SerialPort(portName);
 			p.openPort();
 			p.setParams(115200,//115200 or 38400
@@ -53,9 +65,7 @@ public class WSNManager{
 			//register components to listen to serial data
 			addComponentsListeningOnSerial();
 			
-		} catch (SerialPortException e) {
-			e.printStackTrace();
-		}
+		
 	}
 	
 	/**

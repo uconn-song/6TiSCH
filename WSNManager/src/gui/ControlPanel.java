@@ -38,12 +38,11 @@ public class ControlPanel extends JPanel implements ConsoleReader, SerialListene
 	}
 
 	private void guiInit() {
-		this.setMinimumSize(new Dimension(700,500));
 		GridBagLayout l = new GridBagLayout();
 		setLayout(l);
 		GridBagConstraints c = new GridBagConstraints();
-		c.weightx = 0.5;
-		c.weighty = 0.5;
+		c.weightx = 1.0;
+		c.weighty = 1.0;
 		c.fill=  GridBagConstraints.BOTH;
 		c.gridx=0;
 		c.gridy=0;
@@ -63,22 +62,33 @@ public class ControlPanel extends JPanel implements ConsoleReader, SerialListene
 		
 		revalidate();
 		setVisible(true);
-		this.setBackground(Color.DARK_GRAY);	
+		this.setBackground(Color.DARK_GRAY);
+		
+		
+		//try to listen on com port
+		printSerialDevicePorts();
+	
+		
 	}
 
 	public void handleConsoleInput(String text) {
 		try{
 			if(text.equals("port status"))
 			{
-				serialDevicePorts();
+				printSerialDevicePorts();
 				printOpenPorts();
 			}
 			else if(text.startsWith("listen ")){
 				String portName = text.split(" ")[1];
 				
 				//now we have a port which is opened and a thread which is listening
-				_connectionManager.addConnection(portName);
-				//_ports.put(portName, new PortListenerPair(p,t));
+			
+				try {
+					_connectionManager.addConnection(portName);
+				} catch (SerialPortException e) {
+					_console.printString( e.getMessage());
+				}
+				
 			}
 			//need to add port to the following commands
 			else if(text.startsWith("set baudrate "))
@@ -112,7 +122,7 @@ public class ControlPanel extends JPanel implements ConsoleReader, SerialListene
 				_console.printString("Unrecognized Command {" + text+"}");
 			}
 		}catch(NullPointerException e){
-			serialDevicePorts();
+			printSerialDevicePorts();
 			printOpenPorts();
 		}catch(IllegalFormatException e){
 		
@@ -139,7 +149,7 @@ public class ControlPanel extends JPanel implements ConsoleReader, SerialListene
 	}
 	
 	//print a list of locations for currently attached devices
-	private void serialDevicePorts() {
+	private void printSerialDevicePorts() {
 		_console.printString("all devices available:");
 		String[] portNames = SerialPortList.getPortNames();
 		if(portNames.length==0){

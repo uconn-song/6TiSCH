@@ -29,6 +29,7 @@ public class ScrollableTextArea extends JScrollPane implements MouseListener
 			this.setViewportView(_textArea);
 			setVisible(true);
 			_textArea.setVisible(true);
+			_textArea.setEditable(false);
 		}
 		
 		public void setText(String s)
