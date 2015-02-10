@@ -15,7 +15,7 @@ import jssc.SerialPortList;
 
 public class SerialOperationsThread extends Thread{
 	private boolean alive = true;
-	private SerialPort serialPort;
+	private SerialPort serialPort; //from JSSC
 	
 	//used to assist in deriving the frame which is stored in a
 	//class implementing Frame, i.e. SFrame holds status information.
