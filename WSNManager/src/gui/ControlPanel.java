@@ -2,6 +2,7 @@ package gui;
 
 import gui_components.Console;
 import gui_components.ConsoleReader;
+import gui_components.CustomPacketBuilder;
 import gui_components.ScrollableTextArea;
 
 import java.awt.Color;
@@ -111,9 +112,8 @@ public class ControlPanel extends JPanel implements ConsoleReader, SerialListene
 				String portName = text.split(" ")[0].split("_")[1];
 				buildEchoPacket(text.substring(text.indexOf(' ')+1),portName);
 			}
-			else if(text.equals("c")){
-				System.out.println("not yet implemented");
-				//customMessage();
+			else if(text.equals("custom packet")){
+				customMessage();
 			}else if(text.equals("clear all")){
 				_outputTop.setText("");
 				_outputBot.setText("");
@@ -137,7 +137,7 @@ public class ControlPanel extends JPanel implements ConsoleReader, SerialListene
 		GridBagConstraints c = new GridBagConstraints();
 		c.weightx=1.0;
 		c.weighty=1.0;
-		//f.add(new CustomPacketBuilder(this),c);
+		f.add(new CustomPacketBuilder(_connectionManager),c);
 		f.pack();
 		f.setVisible(true);
 	}

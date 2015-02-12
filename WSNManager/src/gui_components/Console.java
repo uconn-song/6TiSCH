@@ -71,6 +71,7 @@ public class Console extends JPanel {
 		commands.add("listen [PORT NAME]");
 		commands.add("close connection");
 		commands.add("echo_PORTNAME");
+		commands.add("custom packet");
 		//commands.add("set baudrate [Integer Baudrate]");
 		c.fill = GridBagConstraints.BOTH;
 		c.gridx = 1;
