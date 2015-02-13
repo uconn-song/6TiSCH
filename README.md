@@ -1,6 +1,5 @@
 # SeniorDesign-WirelessHART
-# Duy
-#hi
-#yooooo
+# September 2014 - May 2015
 
-Tim was here
+WSNManager is the primary project.  SerialReader was the original code to get started and it was redesigned into WSNManager.
+
