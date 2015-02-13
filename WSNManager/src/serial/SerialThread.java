@@ -101,7 +101,7 @@ public class SerialThread extends Thread{
 			_writeBufferLock.unlock();
 			//TODO:SEND FRAME TO UPPER LAYERS
 		}else{
-			System.out.println(collectedFrame);
+			//System.out.println(collectedFrame);
 			Iterator<SerialListener> it = _listeningComponents.values().iterator();
 			while(it.hasNext()){
 				it.next().acceptFrame(collectedFrame);

@@ -13,6 +13,6 @@ public class EFrame extends Frame {
 	
 	@Override
 	public String toString(){
-		return _address + " Error Frame 0x" + Integer.toHexString(_data.get(4)) + " " + _data.get(5) + " " + _data.get(6);
+		return _address + " Error Frame 0x" + Integer.toHexString(_data.get(4)) + " " +SerialConstants.ERRORS[_data.get(4)] + " " + _data.get(5) + " " + _data.get(6);
 	}
 }
