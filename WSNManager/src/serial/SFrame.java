@@ -81,14 +81,19 @@ public class SFrame extends Frame {
             switch(neighbor.addr_type)
             {
                 case 0x00: //2
+                    neighbor.addr_16b = _data.subList(10,11).toArray();
                     break;
                 case 0x01: //8
+                    neighbor.addr_64b = (byte[])(_data.subList(10,17).toArray());
                     break;
                 case 0x02: //16
+                    neighbor.addr_128b = (byte[])(_data.subList(10,25).toArray());
                     break;
                 case 0x03: //2
+                    neighbor.panid = (byte[])(_data.subList(10,11).toArray());
                     break;
                 case 0x04: //8
+                    neighbor.prefix = (byte[])(_data.subList(10,17).toArray());
                     break;
             }
             // .....
@@ -105,7 +110,10 @@ public class SFrame extends Frame {
 			
 		}
 	}
-	
+	private byte[] toByteArray(List<Byte> list)
+    {
+
+    }
 	
 	@Override
 	public String toString(){
