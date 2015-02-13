@@ -1,5 +1,7 @@
 package serial;
 
+import network_model.NeighborTable;
+
 import java.util.ArrayList;
 
 public class SFrame extends Frame {
@@ -67,6 +69,15 @@ public class SFrame extends Frame {
 		case 9:
 			_statusType = "9 NEIGHBORS";
 			_toStringMessage = "SFrame decode debugNeighborEntry_t";
+            NeighborTable neighbors = new NeighborTable();
+            neighbors.row=_data.get(3);
+            neighbors.used=_data.get(4);
+            neighbors.parentPreference=_data.get(5);
+            neighbors.stableNeighbor=_data.get(6);
+            neighbors.switchStabilityCounter=_data.get(7);
+            neighbors.addr_type=_data.get(8);
+            // .....
+
 			break;
 		case 10:
 			_statusType = "10 KAPERIOD ? ";
