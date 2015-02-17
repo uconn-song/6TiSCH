@@ -82,24 +82,24 @@ public class SFrame extends Frame {
             switch(neighbor.addr_type)
             {
                 case 0x00: //2
-                	
-                    neighbor.addr_16b = _data.subList(10,11).toArray(neighbor.addr_16b);
+                    neighbor.addr_16b = _data.subList(10,12).toArray(neighbor.addr_16b);
                     break;
                 case 0x01: //8
-                    neighbor.addr_64b = _data.subList(10,17).toArray(neighbor.addr_64b);
+                    neighbor.addr_64b = _data.subList(10,18).toArray(neighbor.addr_64b);
                     break;
                 case 0x02: //16
-                    neighbor.addr_128b = _data.subList(10,25).toArray(neighbor.addr_128b);
+                    neighbor.addr_128b = _data.subList(10,26).toArray(neighbor.addr_128b);
                     break;
                 case 0x03: //2
-                    neighbor.panid = _data.subList(10,11).toArray(neighbor.panid);
+                    neighbor.panid = _data.subList(10,12).toArray(neighbor.panid);
                     break;
                 case 0x04: //8
-                    neighbor.prefix = _data.subList(10,17).toArray(neighbor.prefix);
+                    neighbor.prefix = _data.subList(10,18).toArray(neighbor.prefix);
                     break;
             }
             // .....
             table.addRow(neighbor);
+            System.out.println(neighbor.toString());
 			break;
 		case 10:
 			_statusType = "10 KAPERIOD ? ";

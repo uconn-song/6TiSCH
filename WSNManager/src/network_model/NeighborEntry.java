@@ -1,5 +1,7 @@
 package network_model;
 
+import java.util.Arrays;
+
 /**
  * Created by Timothy on 2/13/2015.
  */
@@ -37,12 +39,46 @@ public class NeighborEntry
     @Override
     public String toString()
     {
-        return new String();
+    	String ret= "Neighbor Entry: ";
+    	
+    	switch(addr_type)
+        {
+            case 0x00: //2
+            	ret = ret + " addr_16 " + byteArrayToString(addr_16b,"hex");
+                break;
+            case 0x01: //8
+            	ret = ret + "  addr 64b  " + byteArrayToString(addr_64b,"hex");
+                break;
+            case 0x02: //16
+            	ret = ret + "  addr 128b  " + byteArrayToString(addr_128b, "hex");
+                break;
+            case 0x03: //2
+            	ret = ret+ "  panid " + Arrays.toString(panid);  
+                break;
+            case 0x04: //8
+            	ret = ret + "  prefix  " + Arrays.toString(prefix);
+                break;
+        }    	
+        return ret;
     }
 
     @Override
     public boolean equals(Object obj)
     {
         return this.row == ((NeighborEntry)obj).row;
+    }
+    
+    public String byteArrayToString(Byte[] byteArr,String base ){
+    	String s = "[";
+    	switch(base){
+    	case "hex":
+    		for(int i = 0 ; i < byteArr.length;i++){
+    			s = s+" " + Integer.toHexString((byteArr[i]&0xFF));
+    		}
+    		return s + "] ";
+    	default:
+    		return byteArr.toString();
+    	}
+    	
     }
 }
