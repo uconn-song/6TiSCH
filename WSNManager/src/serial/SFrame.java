@@ -3,6 +3,7 @@ package serial;
 import network_model.NeighborEntry;
 import network_model.NeighborTable;
 
+import java.awt.List;
 import java.util.ArrayList;
 
 public class SFrame extends Frame {
@@ -81,19 +82,20 @@ public class SFrame extends Frame {
             switch(neighbor.addr_type)
             {
                 case 0x00: //2
-                    neighbor.addr_16b = _data.subList(10,11).toArray();
+                	
+                    neighbor.addr_16b = _data.subList(10,11).toArray(neighbor.addr_16b);
                     break;
                 case 0x01: //8
-                    neighbor.addr_64b = (byte[])(_data.subList(10,17).toArray());
+                    neighbor.addr_64b = _data.subList(10,17).toArray(neighbor.addr_64b);
                     break;
                 case 0x02: //16
-                    neighbor.addr_128b = (byte[])(_data.subList(10,25).toArray());
+                    neighbor.addr_128b = _data.subList(10,25).toArray(neighbor.addr_128b);
                     break;
                 case 0x03: //2
-                    neighbor.panid = (byte[])(_data.subList(10,11).toArray());
+                    neighbor.panid = _data.subList(10,11).toArray(neighbor.panid);
                     break;
                 case 0x04: //8
-                    neighbor.prefix = (byte[])(_data.subList(10,17).toArray());
+                    neighbor.prefix = _data.subList(10,17).toArray(neighbor.prefix);
                     break;
             }
             // .....
@@ -110,9 +112,10 @@ public class SFrame extends Frame {
 			
 		}
 	}
-	private byte[] toByteArray(List<Byte> list)
+	private byte[] toByteArray(ArrayList<Byte> list)
     {
-
+		//TODO:Implement method
+		return null;
     }
 	
 	@Override

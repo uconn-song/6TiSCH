@@ -15,11 +15,11 @@ public class NeighborEntry
     public byte addr_type;
     //public byte addr_bodyH; // not entirely clear on these. it looks like there are 5 types of addresses that could be here so I want to figure out how to interpret the type to figure out how long it will be and take that many following bytes and put them in an array.
     //public byte addr_bodyL; // the bodyH, bodyL thing is from the Python parser, but I'm not really sure how that works
-    public byte[] addr_16b = new byte[2];
-    public byte[] addr_64b = new byte[8];
-    public byte[] addr_128b = new byte[16];
-    public byte[] panid = new byte[2]; // 2 bytes
-    public byte[] prefix = new byte[8]; // 8 bytes
+    public Byte[] addr_16b = new Byte[2];
+    public Byte[] addr_64b = new Byte[8];
+    public Byte[] addr_128b = new Byte[16];
+    public Byte[] panid = new Byte[2]; // 2 bytes
+    public Byte[] prefix = new Byte[8]; // 8 bytes
 
     public byte DAGrank;
     public byte rssi;
