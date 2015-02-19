@@ -24,3 +24,10 @@ Write FW-Application to listen for coap messages and give back response, echo wi
 Write FW-Application to modify neighbor table and schedule  
 Write WSNManager software to visualize network  
 Write WSNManager software to modify network parameters  
+
+
+potential roadblocks:
+https://openwsn.atlassian.net/wiki/display/OW/OpenVisualizer#OpenVisualizer-CodeOrganization
+looks as if we are only getting neighbor tables of other motes if they are USB connected. We will need to write our own FW programs to forward this information to the dag root.
+
+
