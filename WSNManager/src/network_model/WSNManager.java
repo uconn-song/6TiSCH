@@ -6,7 +6,8 @@ import gui.GUIManager;
 
 import serial.SerialListener;
 import serial.SerialThread;
-import socket.EchoClient;
+import server.NetworkInterfaceEnumerator;
+import server.Server;
 
 import jssc.SerialPort;
 import jssc.SerialPortException;
@@ -24,17 +25,13 @@ public class WSNManager{
 	{
 		_controlPanel = new ControlPanel(this);
 		new GUIManager(_controlPanel);
-		
-		
-		String[] ports = SerialPortList.getPortNames();
-		if(ports.length==1){
-			addConnection(ports[0]);
-		}
 	}
   
-	public static void main(String[] args) throws SerialPortException {   
+	public static void main(String[] args) throws SerialPortException {  
+		//new NetworkInterfaceEnumerator().ListInterfaces();
+		//new Server(40).start();
     	new WSNManager();
-    	new EchoClient().start();
+    	
     }
     
 
@@ -50,11 +47,16 @@ public class WSNManager{
 	 * @throws SerialPortException 
 	 */
 	public void addConnection(String portName) throws SerialPortException{
+			
 		try{
+			//if port we are trying to open is open ignore otherwise shut down port
+			//which is currently open
+			if(_LBRConnection.getPort().getPortName().equals(portName))
+				return;
 			_LBRConnection.ShutDown();
-		}catch(NullPointerException e){//ensure no connection open
-			}
-		
+		}catch(NullPointerException e){
+			//Throws for first connection we can ignore this
+		}
 			SerialPort p = new SerialPort(portName);
 			p.openPort();
 			p.setParams(115200,//115200 or 38400
@@ -127,8 +129,10 @@ public class WSNManager{
 				try {
 					_thread.kill();
 					_port.closePort();
+					_port = null;
+					_thread = null;
 				} catch (SerialPortException e) {
-					e.printStackTrace();
+					//throws port not open exception does not matter if already closed
 				}
 			}
 		}
