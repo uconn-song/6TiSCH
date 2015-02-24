@@ -3,14 +3,11 @@ package network_model;
 
 import gui.ControlPanel;
 import gui.GUIManager;
-
-import serial.SerialListener;
-import serial.SerialThread;
-import socket.EchoClient;
-
 import jssc.SerialPort;
 import jssc.SerialPortException;
 import jssc.SerialPortList;
+import serial.SerialListener;
+import serial.SerialThread;
 
 /**
  *http://www.javaprogrammingforums.com/java-se-api-tutorials/5603-jssc-library-easy-work-serial-ports.html
@@ -32,9 +29,10 @@ public class WSNManager{
 		}
 	}
   
-	public static void main(String[] args) throws SerialPortException {   
-    	new WSNManager();
-    	new EchoClient().start();
+	public static void main(String[] args) throws SerialPortException
+    {
+        new WSNManager();
+    	//new EchoClient().start();
     }
     
 
