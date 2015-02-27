@@ -14,6 +14,7 @@ import java.util.IllegalFormatException;
 import javax.swing.JFrame;
 import javax.swing.JPanel;
 
+
 import network_model.WSNManager;
 
 import serial.Frame;
@@ -21,6 +22,9 @@ import jssc.SerialPort;
 import jssc.SerialPortException;
 import jssc.SerialPortList;
 import serial.SerialListener;
+import stack.CoapMessage;
+import stack.IPHC_Data;
+import stack.UDP_Datagram;
 
 public class ControlPanel extends JPanel implements ConsoleReader, SerialListener{
 	SerialPort _port;
@@ -117,6 +121,28 @@ public class ControlPanel extends JPanel implements ConsoleReader, SerialListene
 			}else if(text.equals("clear all")){
 				_outputTop.setText("");
 				_outputBot.setText("");
+			} else if (text.equals("send CoAP get"))
+			{
+				CoapMessage m = new CoapMessage("GET", "i", "141592000016c076");
+				
+				//m.printRaw(m.getMessage());
+				UDP_Datagram d = new UDP_Datagram(m);
+				//d.printRaw(d.getMessage());
+				IPHC_Data hc = new IPHC_Data(d);
+				hc.printRaw(hc.getMessage());
+				
+				//now we have iphc all we need to do is append 64 bit address and send
+				byte[] hcArr = hc.getMessage();
+				byte[] dest = hc.destAddr64;
+				byte[] finalMessage = new byte[hcArr.length+9];
+				finalMessage[0] = (byte) ("D".charAt(0)&0xFF);
+				for(int i = 0;i<8;i++){
+					finalMessage[i+1] = dest[i];
+				}
+		    	for(int i = 0; i< hcArr.length;i++){
+		    		finalMessage[i+9] = hcArr[i];
+		    	}
+		    	_connectionManager.send(finalMessage);
 			}
 			else{
 				_console.printString("Unrecognized Command {" + text+"}");
