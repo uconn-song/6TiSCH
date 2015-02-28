@@ -23,15 +23,15 @@ public class NeighborEntry
     public Byte[] panid = new Byte[2]; // 2 bytes
     public Byte[] prefix = new Byte[8]; // 8 bytes
 
-    public byte DAGrank;
+    public short DAGrank;
     public byte rssi;
     public byte numRx;
     public byte numTx;
     public byte numTxACK;
     public byte numWraps;
     public byte asn_4;
-    public byte asn_2_3;
-    public byte asn_0_1;
+    public short asn_2_3;
+    public short asn_0_1;
     public byte joinPrio;
 
     public NeighborEntry(){}
@@ -40,8 +40,15 @@ public class NeighborEntry
     public String toString()
     {
     	String ret= "Neighbor Entry: ";
-    	
-    	switch(addr_type)
+    	ret = ret + "\nrow: " + row;
+        ret = ret + "\nused: " + used;
+        ret = ret + "\nparentPreference: " + parentPreference;
+        ret = ret + "\nstableNeighbor: " + stableNeighbor;
+        ret = ret + "\nswitchStabilityCounter: " + switchStabilityCounter;
+
+
+
+        switch(addr_type)
         {
             case 0x00: //2
             	ret = ret + " addr_16 " + byteArrayToString(addr_16b,"hex");
@@ -58,7 +65,17 @@ public class NeighborEntry
             case 0x04: //8
             	ret = ret + "  prefix  " + Arrays.toString(prefix);
                 break;
-        }    	
+        }
+        ret = ret + "\nDAGrank: " + DAGrank;
+        ret = ret + "\nrssi: " + rssi;
+        ret = ret + "\nnumRx: " + numRx;
+        ret = ret + "\nnumTx: " + numTx;
+        ret = ret + "\nnumTxACK: " + numTxACK;
+        ret = ret + "\nnumWraps: " + numWraps;
+        ret = ret + "\nasn_4: " + asn_4;
+        ret = ret + "\nasn_2_3: " + asn_2_3;
+        ret = ret + "\nasn_0_1: " + asn_0_1;
+        ret = ret + "\njoinPrio: " + joinPrio;
         return ret;
     }
 
