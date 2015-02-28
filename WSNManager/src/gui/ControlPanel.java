@@ -115,6 +115,8 @@ public class ControlPanel extends JPanel implements ConsoleReader, SerialListene
 			}else if(text.startsWith("echo_")){
 				String portName = text.split(" ")[0].split("_")[1];
 				buildEchoPacket(text.substring(text.indexOf(' ')+1),portName);
+			}else if(text.equals("set root")){
+				setRoot();
 			}
 			else if(text.equals("custom packet")){
 				customMessage();
@@ -139,6 +141,11 @@ public class ControlPanel extends JPanel implements ConsoleReader, SerialListene
 			_console.printString("Error executing command {" + text+"}");
 		} 
 	}
+	private void setRoot() {
+		byte[] data = new byte[]{(byte) "R".charAt(0),(byte)"Y".charAt(0),0,0,0,0,0,0,0,0};
+		_connectionManager.send(data);
+	}
+
 	private void handleCoAP(String text) {
 		// coap://151592000016c076/i GET
 		
@@ -154,7 +161,7 @@ public class ControlPanel extends JPanel implements ConsoleReader, SerialListene
 		UDP_Datagram d = new UDP_Datagram(m);
 		//d.printRaw(d.getMessage());
 		IPHC_Data hc = new IPHC_Data(d);
-		hc.printRaw(hc.getMessage());
+		//hc.printRaw(hc.getMessage());
 		
 		//now we have iphc all we need to do is append 64 bit address and send
 		byte[] hcArr = hc.getMessage();
