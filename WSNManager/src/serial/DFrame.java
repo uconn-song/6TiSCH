@@ -2,8 +2,13 @@ package serial;
 
 import jNetPcap.JPacketTest;
 
+import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 
+import packet.PacketAnalyzer;
+import packet.IPUtils;
+import packet.IPHCPacketAnalyzer;
+import packet.PacketAnalyzer.Packet;
 public class DFrame extends Frame {
 
 		//This frame is used by the mote to indicate to the computer it is ready to receive data.
@@ -20,15 +25,36 @@ public class DFrame extends Frame {
 			data.get(6);//asn 3
 			data.get(7);//asn 4
 			ipv6data = new byte[data.size()-10];
-			for(int i = 8 ; i < data.size()-2;i++)
+			
+			byte[] llreceiver = new byte[8];
+			byte[] llsender = new byte[8];
+			//fill in destination address
+			for(int i = 8; i < 16;i++){
+				llreceiver[i-8] = _data.get(i);
+			}
+			//fill in source address
+			for(int i =16; i<24;i++){
+				llsender[i-16] = _data.get(i);
+			}
+			
+			for(int i = 24 ; i < data.size()-2;i++)
 			{
-				ipv6data[i-8]=data.get(i);
+				ipv6data[i-24]=data.get(i);
 				//System.out.print("Data: " + byteToString(data.get(i))+"(0x"+Integer.toHexString(data.get(i)&0xFF)+") ");
 			}
 			//System.out.println();
 			//HDLC.crcValidate(data);
+			Packet p = new Packet(ipv6data, PacketAnalyzer.NETWORK_LEVEL);
 			
-			new JPacketTest(ipv6data);
+			StringBuilder brief = new StringBuilder();
+			StringBuilder verbose = new StringBuilder();
+			IPHCPacketAnalyzer anal = new IPHCPacketAnalyzer();
+			p.llsender = llsender;
+			p.llreceiver=llreceiver;
+			anal.analyzePacket(p, brief, verbose);
+			System.out.println(verbose.toString());
+			
+			//new JPacketTest(ipv6data);
 
 		}
 		
@@ -51,11 +77,42 @@ public class DFrame extends Frame {
 				toret = toret+"\n";
 				for(int i = 8 ; i < _data.size()-2;i++)
 				{
-					toret = toret+" " + Integer.toHexString(_data.get(i));
+					toret = toret+" " + Integer.toHexString(_data.get(i)&0xFF);
 				}
 			}
-			return toret;
+			
+			//this is temporary unsafe way of getting payload in ascii may fail if multiple 
+			//bytes have 0xFF 
+			boolean payloadMarkerSeen =false;
+			StringBuilder sb = new StringBuilder();
+			sb.append("\npayload:");
+			for(int i =5;i<_data.size()-2;i++)
+			{
+				if(payloadMarkerSeen){
+					try {
+						sb.append( new String(new byte[]{_data.get(i)}, "US-ASCII"));
+					} catch (UnsupportedEncodingException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
+					//sb.append((char)((byte) _data.get(i)));
+				}else{
+					if((byte)(_data.get(i)&0xFF)==(byte)0xFF) payloadMarkerSeen = true;
+				}
+			}
+			
+			return toret + sb.toString();
+		}
+		
+		
+		public String convert(byte[] data) {
+		    StringBuilder sb = new StringBuilder(data.length);
+		    for (int i = 0; i < data.length; ++ i) {
+		        if (data[i] < 0) throw new IllegalArgumentException();
+		        sb.append((char) data[i]);
+		    }
+		    return sb.toString();
 		}
 	
-
+		
 }
