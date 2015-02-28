@@ -2,10 +2,13 @@ package serial;
 
 import network_model.NeighborEntry;
 import network_model.NeighborTable;
+import network_model.WSNManager;
 
 import java.util.ArrayList;
 
 public class SFrame extends Frame {
+	//S frame relays root info
+	public static boolean ROOT_SET =false;
 	//composed of 2 byte address, 1 byte type, payload depending on type
 	public String _statusType;
 	public String _address16;
@@ -36,6 +39,17 @@ public class SFrame extends Frame {
 			break;
 		case 1:
 			_statusType = "1 ID";
+			if(_data.get(4)==(byte)1&&!ROOT_SET){
+				for(int i = 0 ; i<8;i++){
+					WSNManager.ROOT_ID[i] = _data.get(i+9);
+				}
+				//System.out.println("I AM ROOT");
+				for(int i = 0 ; i<8;i++){
+					System.out.print(Integer.toHexString(WSNManager.ROOT_ID[i]&0xFF));
+				}
+				System.out.println();
+				ROOT_SET=true;
+			}
 			_toStringMessage = "SFrame handle debugIDManagerEntry_t";
 			break;
 		case 2:

@@ -11,8 +11,8 @@ package stack;
                  +--------+--------+--------+--------+
  */
 public class UDP_Datagram {
-	private int _sourcePort;
-	private int _destinationPort;
+	private int _sourcePort;//2 byte
+	private int _destinationPort;//2 byte
 	private int _length;// 2 bytes specify length of datagram >8 bytes
 	private int _checksum = 0;// 2 bytes
 	private byte[] _payload;
@@ -20,6 +20,53 @@ public class UDP_Datagram {
 	
 	public byte[] _destAddr64;
 	
+	/**
+	 * for parsing received messages
+	 */
+	public UDP_Datagram(byte[] b) {
+		_sourcePort = ((b[0]&0xFF)<<8)+(b[1]&0xFF);
+		System.out.println(Integer.toBinaryString(_sourcePort));
+		_destinationPort = (
+				(b[2]&0xFF)<<8)+(b[3]&0xFF);
+		System.out.println(_destinationPort + " " + Integer.toBinaryString(_destinationPort));
+		_length = ((b[4]&0xFF)<<8) + b[5]&0xFF;
+		_payload = new byte[b.length-8];
+		for(int i =0;i<b.length-8;i++){
+			_payload[i]=b[i+8];
+		}
+		// compute checksum
+		checksumIteration(_sourcePort);
+		checksumIteration(_destinationPort);
+		checksumIteration(_length);
+		
+		if (_payload.length % 2 == 0) {
+			for (int i = 0; i < _payload.length; i = i + 2) {
+				checksumIteration(((_payload[i]&0xFF) << 8) + _payload[i + 1]&0xFF);
+			}
+		} else {
+			
+			for (int i = 0; i < _payload.length-1; i = i + 2) {
+				checksumIteration(((_payload[i]&0xFF) << 8) + _payload[i + 1]&0xFF);
+			}
+			
+			checksumIteration((_payload[_payload.length-1]&0xFF)<<8);
+		}
+		
+		_checksum = _checksum ^ 0xFFFF;
+		
+		System.out.println(_checksum);
+		int check = (b[6]&0xFF)<<8|(b[7]&0xFF);
+		System.out.println(check);
+		
+		
+		printRaw(b);
+		
+		//System.out.println(byteToString((byte) ((_checksum >> 8) & 0xFF))
+		//		+ byteToString((byte) (_checksum & 0xFF)));
+	}
+	
+	
+	//for sending messages
 	public UDP_Datagram(CoapMessage m) {
 		_sourcePort = m.sourcePort;
 		_destinationPort = m.destPort;

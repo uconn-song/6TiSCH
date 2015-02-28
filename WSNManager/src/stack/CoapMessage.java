@@ -55,7 +55,7 @@ public class CoapMessage extends ByteMessage {
 
 	// using one byte tokens
 	private int _TKLMask = 0b00001111;
-	private byte _TKL = 0b00000001;// bits 4-7 token length
+	private int _TKL = 0b00000001;// bits 4-7 token length
 	
 	// code is split into 3 bit class 5 bit detail aaa.bbbbb
 	// for example GET is 0.01 or 0b000_00001
@@ -93,8 +93,10 @@ public class CoapMessage extends ByteMessage {
 	private void parseCoAPMessage(byte[] toParse) {
 		
 		byte b = toParse[0];
-		if((b&_verMask>>6)!=1) throw new IllegalArgumentException("wrong CoAP version");
-		if((b&_TKLMask)!=1) throw new IllegalArgumentException("token length too long");
+		//System.out.println(ByteMessage.byteToString(b) +" " + ((b&_verMask)>>6) + " " + ByteMessage.byteToString((byte) _verMask));
+		if(((b&_verMask)>>6)!=1) throw new IllegalArgumentException("wrong CoAP version");
+		_TKL = (byte) (b&_TKLMask)&0xFF;
+		if(_TKL>1) throw new IllegalArgumentException("token length too long");
 		
 		//two part coap code determining message type
 		byte code = toParse[1];
@@ -104,9 +106,11 @@ public class CoapMessage extends ByteMessage {
 		
 		int MessageID = toParse[2]<<8+toParse[3];
 		//System.out.println(MessageID);
+		if(_TKL==1){
 		_token = toParse[4];
+		}
 		//if length = 5 then header and token is all this packet consists of
-		if(toParse.length==5) return;
+		if(toParse.length==4 || toParse.length==5) return;
 		
 		int payloadMarker = 5;
 		int lastOptionCode = 0;
@@ -130,19 +134,13 @@ public class CoapMessage extends ByteMessage {
 		}
 		
 		if(_payload.length>0){
-			System.out.println("Payload:");
+			System.out.println("CoAP Payload: [Binary:{");
 			this.printRaw(_payload);
-			System.out.println(getPayloadAsAscii());
+			System.out.println("}\nASCII: {"+ getPayloadAsAscii()+ "} \n] ");
 		}
-	}
-	private int parseOptions() {
-		// TODO Auto-generated method stub
-		return 6;
 	}
 	
 	//Constructors for building CoAP Messages
-
-
 
 	public CoapMessage(String type, String coapURI) {
 		_GLBmessageID = _GLBmessageID++ % 65535;

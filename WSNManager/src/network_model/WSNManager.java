@@ -1,6 +1,8 @@
 package network_model;
 
 
+import java.util.Arrays;
+
 import gui.ControlPanel;
 import gui.GUIManager;
 
@@ -25,6 +27,8 @@ public class WSNManager{
 	//In order to keep track of multiple serial connections, keep a hash map of portname ("COM7") as key and a pair {port,thread} as value
 	private LBRConnection _LBRConnection;
 	private ControlPanel _controlPanel;
+	public static byte[] NETWORK_PREFIX = new byte[]{0,0,0,0,0,0,0,0};
+	public static byte[] ROOT_ID = new byte[8];
 	public WSNManager() throws SerialPortException
 	{
 		_controlPanel = new ControlPanel(this);

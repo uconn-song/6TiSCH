@@ -11,6 +11,8 @@ import packet.IPUtils;
 import packet.IPHCPacketAnalyzer;
 import packet.PacketAnalyzer.Packet;
 import stack.CoapMessage;
+import stack.IPHC_Data;
+import stack.UDP_Datagram;
 public class DFrame extends Frame {
 
 		//This frame is used by the mote to indicate to the computer it is ready to receive data.
@@ -20,6 +22,7 @@ public class DFrame extends Frame {
 		private byte[] _L3_payload;
 		private CoapMessage _CoAPMessage;
 		private boolean _isCoAP_DFrame=false;
+		private IPHC_Data _iphcData;
 		
 		public DFrame(ArrayList<Byte> data) {
 			setType("Data");
@@ -31,53 +34,42 @@ public class DFrame extends Frame {
 			data.get(5);//asn 2
 			data.get(6);//asn 3
 			data.get(7);//asn 4
-			ipv6data = new byte[data.size()-10];
+			ipv6data = new byte[data.size()-10-16];
 			
-			byte[] llreceiver = new byte[8];
-			byte[] llsender = new byte[8];
-			//fill in destination address
+			
+			//For IPHC
+			byte[] l2receiver = new byte[8];
+			byte[] l2sender = new byte[8];
+			//fill in destination address (spoofed header for iphc)
 			for(int i = 8; i < 16;i++){
-				llreceiver[i-8] = _data.get(i);
+				l2receiver[i-8] = _data.get(i);
 			}
-			//fill in source address
+			//fill in source address (spoofed header for iphc)
 			for(int i =16; i<24;i++){
-				llsender[i-16] = _data.get(i);
+				l2sender[i-16] = _data.get(i);
 			}
 			
+			//ipv6 payload
 			for(int i = 24 ; i < data.size()-2;i++)
 			{
 				ipv6data[i-24]=data.get(i);
 				//System.out.print("Data: " + byteToString(data.get(i))+"(0x"+Integer.toHexString(data.get(i)&0xFF)+") ");
 			}
 		
+			//decompress from iphc to derive ipv6 fields
+			_iphcData = new IPHC_Data(ipv6data,l2sender,l2receiver);
+			_protocol = _iphcData.getNextHeaderProtocol();
+			_L3_payload = _iphcData.getNextHeader();
 			
-			/*
-			 * determine what type of message this is, and extract the layer 3 message from it
-			 * after this is called:
-			 * _protocol field will be set to either "UDP" or "ICMPv6" if no errors found
-			 * _L3_payload will have the raw data corresponding to that protocol
-			 */
-			decompressICMPv6(ipv6data, llsender,llreceiver);
-			
-			/*
-			 * since udp is simple and we have no ports and this message is for the manager
-			 * we can let CoAP ignore the header.
-			 */
-			if(_protocol.equals("UDP")){
-				byte[] coapMess = new byte[_L3_payload.length-8];
-				for(int i = 8;i<_L3_payload.length;i++)
-				{
-					coapMess[i-8] = _L3_payload[i];
+			//check if the packet is meant for this mote
+			//TODO: implement forwarding to other motes
+			if(_iphcData.isDestinationRoot()){
+				if(_protocol.equals("UDP")){
+					parseCoAP();
 				}
-				try{
-				_CoAPMessage = new CoapMessage(coapMess);
-				_isCoAP_DFrame = true;
-				}catch(IllegalArgumentException e)
-				{
-					System.out.println("Failed to parse UDP Datagram as CoAP: "+e.getMessage());
+			}else{
+				System.out.println("implement packet forwarding to alternate destinations");	
 				}
-				
-			}
 			
 			/*Packet p = new Packet(ipv6data, PacketAnalyzer.NETWORK_LEVEL);
 			StringBuilder brief = new StringBuilder();
@@ -95,7 +87,44 @@ public class DFrame extends Frame {
 		}
 		
 		
+		/**
+		 * Parse the detected UDP Datagram as a CoAP message and store it in a CoAP message variable
+		 */
+		private void parseCoAP() {
+			try{
+			byte[] coapMess = new byte[_L3_payload.length-8];
+			for(int i =8;i<_L3_payload.length;i++){
+				coapMess[i-8] = _L3_payload[i];
+			}
+			_CoAPMessage = new CoapMessage(coapMess);
+			_isCoAP_DFrame = true;
+			}catch(IllegalArgumentException e){
+				/*Very strange sometimes error messages from mote side have checksum elided from udp...this is 
+				 * a hack to attempt to parse message as CoAP assuming checksum elided...no other way to check that
+				 * right now
+				 */
+				if(e.getMessage().equals("wrong CoAP version")){
+					try{
+						printRaw(_L3_payload);
+						byte[] coapMess2 = new byte[_L3_payload.length-6];
+						
+						for(int i =0;i<_L3_payload.length-6;i++){
+							coapMess2[i] = _L3_payload[i+6];
+						}
+						System.out.println("coap mess attempt 2"); printRaw(coapMess2);
+						_CoAPMessage = new CoapMessage(coapMess2);
+						_isCoAP_DFrame = true;
+					}catch(IllegalArgumentException e2){
+					System.out.println("Failed to parse UDP Datagram as CoAP: "+e2.getMessage());
+					}
+				}else{
+					System.out.println(e.getMessage());
+				}
+			}
+		}
 		
+
+
 		public boolean isCoAPMessage(){
 			return _isCoAP_DFrame;
 				
@@ -109,119 +138,7 @@ public class DFrame extends Frame {
 			return _CoAPMessage;
 		}
 		
-		/**
-		 * attempt to decompress and toss the iphc header and extract ICMPv6/UDP data
-		 * @param ipv6data
-		 * @param llsender
-		 * @param llreceiver
-		 * @return
-		 */
-		private byte[] decompressICMPv6(byte[] ipv6data, byte[] llsender,
-				byte[] llreceiver) {
-			//assume all possible fields elided, next header starts at byte 2
-			int nh=2;
-			int tfSize=0;
-			int nhSize=0;
-			int hlSize=0;
-			//printRaw(ipv6data);
-			if(!((ipv6data[0]>>5)==3)) throw new IllegalArgumentException("Expected iphc header not found");
-			byte toParse = ipv6data[0];
-			int tf = (toParse >> 3) & 0x03;
-			boolean nhc = (toParse & 0x04) > 0;
-			int hlim = (toParse & 0x03);
-			toParse = ipv6data[1];
-			int cid = (toParse >> 7) & 0x01;
-			int sac = (toParse >> 6) & 0x01;
-			int sam = (toParse >> 4) & 0x03;
-			boolean m = ((toParse >> 3) & 0x01) != 0;
-			int dac = (toParse >> 2) & 0x01;
-			int dam = toParse & 0x03;
-			
-			//calculate next header location based on elided fields
-			System.out.println("tf:"+tf + " nhc " + nhc + " hlim:" + hlim + " cid:" +cid+" sac:" + sac+" sam:" + sam +" m:"+ m +" dac:" +dac +" dam:" + dam );
-			
-			switch(tf){
-			case 0: nh = nh+4;
-					tfSize = 4;
-				break;
-			case 1: nh = nh+3;
-					tfSize=3;
-				break;
-			case 2: nh = nh+1;
-					tfSize=1;
-				break;
-			case 3: break;
-			}
-			
-			if(nhc){
-				throw new IllegalArgumentException("IPHC Next header compression not yet implemented.");
-			}else{
-				nhSize=1;
-				nh++;
-			}
-			
-			if(hlim==0){
-				hlSize=1;
-				nh++;
-			}else{
-				throw new IllegalArgumentException("Hop limit compression not yet implemented");
-			}
-			
-			if(cid!=0){
-				throw new IllegalArgumentException("CID not yet implemented");
-			}
-			
-			//source address compression
-			if(sac==0){
-				switch(sam){
-				case 0: nh = nh + 16; break;
-				case 1:nh = nh+ 8;break;
-				case 2:nh = nh+2;break;
-				case 3:break;
-				}
-			} else{
-				switch(sam){
-				case 0:break;
-				case 1:nh = nh+8;break;
-				case 2:nh = nh+2;break;
-				case 3:break;
-				}
-			}
-			//destination address compression
-			if(dac==0){
-				switch(dam){
-				case 0: nh = nh + 16; break;
-				case 1:nh = nh+ 8;break;
-				case 2:nh = nh+2;break;
-				case 3:break;
-				}
-			} else{
-				switch(dam){
-				case 0:break;
-				case 1:nh = nh+8;break;
-				case 2:nh = nh+2;break;
-				case 3:break;
-				}
-			}
-			//figure out what transport layer protocol is being used
-			int nextHeaderProtocol = ipv6data[2+tfSize];
-			switch(nextHeaderProtocol){
-			case 17:
-				_protocol= "UDP";
-				break;
-			case 58:
-				_protocol = "ICMPv6";
-				break;
-			default:
-				throw new IllegalArgumentException("Unsupported protocol " + nextHeaderProtocol);
-			}
-			byte[] nextHeader= new byte[ipv6data.length-16-nh];
-			for(int i = 0 ; i < nextHeader.length;i++){
-				nextHeader[i] = ipv6data[i+nh];
-			}
-			_L3_payload = nextHeader;
-			return nextHeader;
-		}
+	
 
 
 		@Override
