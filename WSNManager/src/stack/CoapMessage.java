@@ -5,7 +5,7 @@ import java.util.IllegalFormatException;
 
 import javax.xml.bind.DatatypeConverter;
 
-import org.jnetpcap.packet.Payload;
+
 
 
 public class CoapMessage extends ByteMessage {
