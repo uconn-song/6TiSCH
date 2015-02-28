@@ -17,6 +17,7 @@ import javax.swing.JPanel;
 
 import network_model.WSNManager;
 
+import serial.DFrame;
 import serial.Frame;
 import jssc.SerialPort;
 import jssc.SerialPortException;
@@ -135,10 +136,9 @@ public class ControlPanel extends JPanel implements ConsoleReader, SerialListene
 			printSerialDevicePorts();
 			printOpenPorts();
 		}catch(IllegalFormatException e){
-		
 			_console.printString(e.getMessage());
 		}catch(NumberFormatException | ArrayIndexOutOfBoundsException e){
-			_console.printString("Error executing command {" + text+"}");
+			_console.printString("Error executing command {"+ text+"}");
 		} 
 	}
 	private void setRoot() {
@@ -175,7 +175,7 @@ public class ControlPanel extends JPanel implements ConsoleReader, SerialListene
     		finalMessage[i+9] = hcArr[i];
     	}
     	_connectionManager.send(finalMessage);
-		
+		System.out.println("sent");
 	}
 
 	private void customMessage() {
@@ -237,6 +237,8 @@ public class ControlPanel extends JPanel implements ConsoleReader, SerialListene
 			_outputTop.append(collectedFrame.toString()+ "\n");
 		}else if(collectedFrame.getType().equals("Data")){
 			_outputBot.append(collectedFrame.toString()+"\n");
+			 CoapMessage m = ((DFrame)collectedFrame).getCoAPMessage();
+			 _outputBot.append(m.getPayloadAsAscii());
 		}else if(collectedFrame.getType().equals("Request")){
 			_outputTop.append(collectedFrame.toString()+ "\n");
 		}

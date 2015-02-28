@@ -29,9 +29,7 @@ public class IPHC_Data {
  
  public IPHC_Data(UDP_Datagram d){
 	 destAddr64 = d._destAddr64;
-	 System.out.println(destAddr64.length);
 	 payload = d.getMessage();
-	 System.out.println(payload.length);
 	 for(int i = 0 ; i < srcAddr128.length;i++){
 		 srcAddr128[i] = (byte) i;
 	 }

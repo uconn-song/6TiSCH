@@ -1,6 +1,7 @@
 package stack;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.IllegalFormatException;
 
 import javax.xml.bind.DatatypeConverter;
@@ -9,12 +10,53 @@ import javax.xml.bind.DatatypeConverter;
 
 
 public class CoapMessage extends ByteMessage {
-	private byte _ver = 0b01000000; // version 1 always, bit 0 and 1
+	
+	private static HashMap<String,String> COAP_CODES = new HashMap<String,String>();
+	
+	static{
+		COAP_CODES.put("2.1", "Created");
+		COAP_CODES.put("2.2", "Deleted");
+		COAP_CODES.put("2.3", "Valid");
+		COAP_CODES.put("2.4", "Changed");
+		COAP_CODES.put("2.5", "Content");
+		//error codes
+		COAP_CODES.put("4.0", "Bad Request");
+		COAP_CODES.put("4.1", "Unauthorized");
+		COAP_CODES.put("4.2", "Bad Option");
+		COAP_CODES.put("4.3", "Forbidden");
+		COAP_CODES.put("4.4", "Not Found");
+		COAP_CODES.put("4.5", "Method Not Allowed");
+		COAP_CODES.put("4.6", "Not Acceptable");
+		
+		COAP_CODES.put("4.12", "Precondition Failed");
+		COAP_CODES.put("4.13", "Request Entity Too Large");
+		COAP_CODES.put("4.15", "Unsupported Content-Format");
+		
+		COAP_CODES.put("5.0", "Internal Server Error");
+		COAP_CODES.put("5.1", "Not Implemented");
+		COAP_CODES.put("5.2", "Bad Gateway");
+		COAP_CODES.put("5.3", "Service Unavailable");
+		COAP_CODES.put("5.4", "Gateway Timeout");
+		COAP_CODES.put("5.5", "Proxying Not Supported");
+	}
+			
+	
+	
+	
+	
+	
+	
+	
+	private int _verMask =  0b11000000;
+	private byte _ver =     0b01000000; // version 1 always, bit 0 and 1
+	
+	private int _typeMask = 0b00110000;
 	private byte _type = 0b00000000;// 0 confirmable by default bits 2 and 3
 
 	// using one byte tokens
+	private int _TKLMask = 0b00001111;
 	private byte _TKL = 0b00000001;// bits 4-7 token length
-
+	
 	// code is split into 3 bit class 5 bit detail aaa.bbbbb
 	// for example GET is 0.01 or 0b000_00001
 	private byte _Code = 0b00000000;// GET,PUT, ETC
@@ -24,21 +66,86 @@ public class CoapMessage extends ByteMessage {
 	private int _token;
 
 	private ArrayList<Byte> _options = new ArrayList<Byte>();
-	private ArrayList<Byte> _payload = new ArrayList<Byte>();
-
+	private byte[] _payload = new byte[0];
+	
+	
+	//for lower layer
 	public byte[] _destIID64 = new byte[8];
+	
 	// For UDP
-
 	public int sourcePort = 5683;// 2 bytes
 	public int destPort = 5683;// default coap port
 
-	private int lastOptionDelta = 0;
+	private int _lastOptionType=0;
+	
+	//The full CoAP header and payload
+	private byte[] _message;
+	
+	
+	/**
+	 * Constructor for parsing CoAP Message
+	 * @param toParse the byte array to parse
+	 */
+	public CoapMessage(byte[] toParse){
+		//printRaw(toParse);
+		parseCoAPMessage(toParse);
+	}
+	private void parseCoAPMessage(byte[] toParse) {
+		
+		byte b = toParse[0];
+		if((b&_verMask>>6)!=1) throw new IllegalArgumentException("wrong CoAP version");
+		if((b&_TKLMask)!=1) throw new IllegalArgumentException("token length too long");
+		
+		//two part coap code determining message type
+		byte code = toParse[1];
+		int codeA = (code & 0b11100000)>>5;
+		int codeB = code & 0b00011111;
+		if(codeA != 2) throw new IllegalArgumentException( "COAP ERROR : " + COAP_CODES.get(codeA+"."+codeB));
+		
+		int MessageID = toParse[2]<<8+toParse[3];
+		//System.out.println(MessageID);
+		_token = toParse[4];
+		//if length = 5 then header and token is all this packet consists of
+		if(toParse.length==5) return;
+		
+		int payloadMarker = 5;
+		int lastOptionCode = 0;
+		boolean optionsFound=false;
+		//check for options
+		while(payloadMarker< toParse.length){
+			if((toParse[payloadMarker]&0xFF)==0xFF){
+				payloadMarker++;
+				break;
+			}
+			optionsFound=true;	
+			payloadMarker++;
+		}
+		if(optionsFound) throw new IllegalArgumentException("Options should not be added to messages to manager");
+		//if payload size > 0
+		if(toParse.length-1 >= payloadMarker){
+			_payload = new byte[toParse.length-payloadMarker];
+			for(int i  = 0; i< toParse.length-payloadMarker;i++){
+				_payload[i] = toParse[i+payloadMarker];
+			}
+		}
+		
+		if(_payload.length>0){
+			System.out.println("Payload:");
+			this.printRaw(_payload);
+			System.out.println(getPayloadAsAscii());
+		}
+	}
+	private int parseOptions() {
+		// TODO Auto-generated method stub
+		return 6;
+	}
+	
+	//Constructors for building CoAP Messages
+
+
 
 	public CoapMessage(String type, String coapURI) {
-
 		_GLBmessageID = _GLBmessageID++ % 65535;
-
-		
 		_token = 1;
 		_messageID = _GLBmessageID;
 
@@ -50,10 +157,11 @@ public class CoapMessage extends ByteMessage {
 			System.out.println(type + " not implemented, message not parsed");
 			return;
 		}
-
 		parseURI(coapURI);
-
+		buildMessage();
 	}
+
+	
 
 	/**
 	 * Debug CoapMessage only supported type is GET URIPath like "l" for led app
@@ -88,19 +196,20 @@ public class CoapMessage extends ByteMessage {
 		} else {
 			System.out.println("ERROR IN ADDR LENGTH");
 		}
+		
+		buildMessage();
 
 	}
 
 	/**
 	 * adds resource option
-	 * 
 	 * @param URIPath
 	 */
 	private void newURIPathOption(String URIPath) {
 		// option delta = difference between this option code and last option
 		// delta
-		int optionDelta = Math.abs(lastOptionDelta - 11);
-		lastOptionDelta = optionDelta;
+		int optionDelta = Math.abs(_lastOptionType - 11);
+		_lastOptionType = 11;
 		int optionLength = URIPath.length();
 		_options.add((byte) ((optionDelta << 4 ^ optionLength) & 0xFF));
 		for (int i = 0; i < URIPath.length(); i++) {
@@ -121,12 +230,19 @@ public class CoapMessage extends ByteMessage {
 
 	}
 
-	/**
-	 * 
+	/** 
 	 * @return entire CoAP header and payload as byte[]
 	 */
 	public byte[] getMessage() {
-		byte[] b = new byte[4 + _TKL + _options.size() + _payload.size()];
+		return _message;
+	}
+	
+	
+	/**
+	 * build CoAP message from information provided
+	 */
+	private void buildMessage() {
+		byte[] b = new byte[4 + _TKL + _options.size() + _payload.length];
 		b[0] = (byte) (_ver ^ _type ^ _TKL);
 		b[1] = _Code;
 		b[2] = (byte) ((_messageID >> 8) & 0xFF);// first byte of message id
@@ -138,15 +254,15 @@ public class CoapMessage extends ByteMessage {
 			index++;
 		}
 
-		if (_payload.size() > 0) {
+		if (_payload.length > 0) {
 			index++;
 			b[index] = (byte) 0b11111111;
 		}
-		for (int i = 0; i < _payload.size(); i++) {
-			b[index] = _payload.get(i);
+		for (int i = 0; i < _payload.length; i++) {
+			b[index] = _payload[i];
 			index++;
 		}
-		return b;
+		_message = b;
 	}
 
 	// Debug Functions
@@ -159,6 +275,14 @@ public class CoapMessage extends ByteMessage {
 			// every 4 bytes new line
 		}
 		System.out.println();
+	}
+	
+	public String getPayloadAsAscii(){
+		    StringBuilder sb = new StringBuilder(_payload.length);
+		    for (int i = 0; i < _payload.length; ++ i) {
+		        sb.append((char) _payload[i]);
+		    }
+		    return sb.toString();
 	}
 
 	// PAYLOAD
@@ -175,17 +299,23 @@ public class CoapMessage extends ByteMessage {
 }
 
 /*
- * 0 1 2 3 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
- * +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+ |Ver| T |
- * TKL | Code | Message ID |
- * +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+ | Token (if
- * any, TKL bytes) ...
- * +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+ | Options
- * (if any) ...
- * +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+ |1 1 1 1 1
- * 1 1 1| Payload (if any) ...
- * +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+ +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
  * 
+ * 
+ * 
+ * 
+ * 
+ *  0                   1                   2                   3
+    0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
+   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+   |Ver| T |  TKL  |      Code     |          Message ID           |
+   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+   |   Token (if any, TKL bytes) ...
+   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+   |   Options (if any) ...
+   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+   |1 1 1 1 1 1 1 1|    Payload (if any) ...
+   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
  * 
  * +------+--------+-----------+ | Code | Name | Reference |
  * +------+--------+-----------+ | 0.01 | GET | [RFC7252] | | 0.02 | POST |

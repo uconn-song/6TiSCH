@@ -72,6 +72,8 @@ public class Console extends JPanel {
 		commands.add("close connection");
 		commands.add("echo_PORTNAME");
 		commands.add("custom packet");
+		commands.add("set root");
+		commands.add("coap://[16DigitHexDestination]/[RESOURCE] get");
 		//commands.add("set baudrate [Integer Baudrate]");
 		c.fill = GridBagConstraints.BOTH;
 		c.gridx = 1;
@@ -178,15 +180,19 @@ public class Console extends JPanel {
 				String selected = list.getSelectedValue();
 				if (selected.startsWith("listen")) {
 					console.setText("listen ");
-				} else if (selected.startsWith("set baud")) {
+				} else if (selected.startsWith("coap://")){
+					console.setText("coap://");
+				}else if(selected.equals("set root")){
+					console.setText("set root");
+				}else if (selected.startsWith("set baud")) {
 					console.setText("set baudrate ");
-				} else if (selected.startsWith("echo")) {
+				}else if (selected.startsWith("echo")) {
 					console.setText("echo_");
-				} else if (selected.equals("close all")) {
+				}else if (selected.equals("close all")) {
 					console.setText("close all");
-				} else if (selected.startsWith("close ")) {
+				}else if (selected.startsWith("close ")) {
 					console.setText("close connection");
-				} else {
+				}else {
 					console.setText((String) list.getSelectedValue());
 				}
 				console.requestFocus();

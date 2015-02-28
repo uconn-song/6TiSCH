@@ -54,7 +54,23 @@ public class IPHCPacketAnalyzer extends PacketAnalyzer {
 	private static byte[][] addrContexts = new byte[][] { { (byte) 0xaa,
 			(byte) 0xaa, 0, 0, 0, 0, 0, 0 } };
 	private static final int IPHC_DISPATCH = 0x60;
-
+	
+	
+	private int _protocol;
+	
+	public int getProtocol(){
+		return _protocol;
+	}
+	
+	public boolean isTCP(){
+		return _protocol == PROTO_TCP;
+	}
+	public boolean isUDP(){
+		return _protocol == PROTO_UDP;
+	}
+	public boolean isICMP(){
+		return _protocol == PROTO_ICMP;
+	}
 	/* packet must be on network level && have a IPHC dispatch */
 	@Override
 	public boolean matchPacket(Packet packet) {
@@ -431,7 +447,8 @@ public class IPHCPacketAnalyzer extends PacketAnalyzer {
 		IPUtils.getUncompressedIPv6AddressString(verbose, srcAddress);
 		verbose.append(" to ");
 		IPUtils.getUncompressedIPv6AddressString(verbose, destAddress);
-		verbose.append("  proto: " ).append(proto);
+		verbose.append("  proto: " ).append(protoStr);
+		_protocol = proto;
 		if (error != null) {
 			verbose.append(" ").append(error);
 		}

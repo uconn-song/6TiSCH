@@ -123,7 +123,7 @@ public class SFrame extends Frame {
             neighbor.asn_0_1 = (short)(byte1 ^ byte2);
             neighbor.joinPrio = _data.get(index);
             table.addRow(neighbor);
-            System.out.println(neighbor.toString());
+          //  System.out.println(neighbor.toString());
 			break;
 		case 10:
 			_statusType = "10 KAPERIOD ? ";

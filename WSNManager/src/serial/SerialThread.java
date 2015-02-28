@@ -92,6 +92,7 @@ public class SerialThread extends Thread{
 	}
 	
 	private void closeFrame() throws UnsupportedEncodingException, Exception {
+		try{
 		//build a frame from raw data
 		Frame collectedFrame = parseInputBuffer();
 		//metadata for debugging
@@ -107,6 +108,9 @@ public class SerialThread extends Thread{
 				it.next().acceptFrame(collectedFrame);
 			}
 			//TODO: SEND FRAME TO UPPER LAYERS
+		}
+		}catch(Exception e){
+			System.out.println(e.getMessage());
 		}
 		_readBuffer = new ArrayList<Byte>();
 	}
