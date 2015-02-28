@@ -111,7 +111,7 @@ public class ControlPanel extends JPanel implements ConsoleReader, SerialListene
 					_connectionManager.closeConnection();
 				}else{
 					_console.printString("No connections were open\n");
-				}
+				}	
 			}else if(text.startsWith("echo_")){
 				String portName = text.split(" ")[0].split("_")[1];
 				buildEchoPacket(text.substring(text.indexOf(' ')+1),portName);
@@ -121,28 +121,10 @@ public class ControlPanel extends JPanel implements ConsoleReader, SerialListene
 			}else if(text.equals("clear all")){
 				_outputTop.setText("");
 				_outputBot.setText("");
-			} else if (text.equals("send CoAP get"))
+			} else if (text.startsWith("coap://"))
 			{
-				CoapMessage m = new CoapMessage("GET", "i", "141592000016c076");
-				
-				//m.printRaw(m.getMessage());
-				UDP_Datagram d = new UDP_Datagram(m);
-				//d.printRaw(d.getMessage());
-				IPHC_Data hc = new IPHC_Data(d);
-				hc.printRaw(hc.getMessage());
-				
-				//now we have iphc all we need to do is append 64 bit address and send
-				byte[] hcArr = hc.getMessage();
-				byte[] dest = hc.destAddr64;
-				byte[] finalMessage = new byte[hcArr.length+9];
-				finalMessage[0] = (byte) ("D".charAt(0)&0xFF);
-				for(int i = 0;i<8;i++){
-					finalMessage[i+1] = dest[i];
-				}
-		    	for(int i = 0; i< hcArr.length;i++){
-		    		finalMessage[i+9] = hcArr[i];
-		    	}
-		    	_connectionManager.send(finalMessage);
+				//String d = "coap://151592000016c076/i GET";
+				handleCoAP(text);
 			}
 			else{
 				_console.printString("Unrecognized Command {" + text+"}");
@@ -157,6 +139,38 @@ public class ControlPanel extends JPanel implements ConsoleReader, SerialListene
 			_console.printString("Error executing command {" + text+"}");
 		} 
 	}
+	private void handleCoAP(String text) {
+		// coap://151592000016c076/i GET
+		
+		String[] iidResourcePair = text.split("//")[1].split("/");
+		String iid = iidResourcePair[0];
+		//"141592000016c076"
+		
+		String resource = iidResourcePair[1].split(" ")[0];
+		String method = iidResourcePair[1].split(" ")[1];
+		CoapMessage m = new CoapMessage(method,resource, iid);
+		
+		//m.printRaw(m.getMessage());
+		UDP_Datagram d = new UDP_Datagram(m);
+		//d.printRaw(d.getMessage());
+		IPHC_Data hc = new IPHC_Data(d);
+		hc.printRaw(hc.getMessage());
+		
+		//now we have iphc all we need to do is append 64 bit address and send
+		byte[] hcArr = hc.getMessage();
+		byte[] dest = hc.destAddr64;
+		byte[] finalMessage = new byte[hcArr.length+9];
+		finalMessage[0] = (byte) ("D".charAt(0)&0xFF);
+		for(int i = 0;i<8;i++){
+			finalMessage[i+1] = dest[i];
+		}
+    	for(int i = 0; i< hcArr.length;i++){
+    		finalMessage[i+9] = hcArr[i];
+    	}
+    	_connectionManager.send(finalMessage);
+		
+	}
+
 	private void customMessage() {
 		JFrame f = new JFrame();
 		f.setLayout(new GridBagLayout());
