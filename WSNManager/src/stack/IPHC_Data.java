@@ -87,12 +87,12 @@ private String _protocol;
  */
 public IPHC_Data(byte[] ipv6data, byte[] l2sender, byte[] l2receiver) {
 	//assume all possible fields elided, next header starts at byte 2
-		int nh=2;
+		int nhPtr=2;
 		int tfSize=0;
 		int nhSize=0;
 		int hlSize=0;
 		//printRaw(ipv6data);
-		if(!((ipv6data[0]>>5)==3)) throw new IllegalArgumentException("Expected iphc header not found");
+		if(!((ipv6data[0]>>5)==3)) throw new IllegalArgumentException("The expected iphc header was not found");
 		byte toParse = ipv6data[0];
 		int tf = (toParse >> 3) & 0x03;
 		boolean nhc = (toParse & 0x04) > 0;
@@ -109,13 +109,13 @@ public IPHC_Data(byte[] ipv6data, byte[] l2sender, byte[] l2receiver) {
 		//System.out.println("tf:"+tf + " nhc " + nhc + " hlim:" + hlim + " cid:" +cid+" sac:" + sac+" sam:" + sam +" m:"+ m +" dac:" +dac +" dam:" + dam );
 		
 		switch(tf){
-		case 0: nh = nh+4;
+		case 0: nhPtr = nhPtr+4;
 				tfSize = 4;
 			break;
-		case 1: nh = nh+3;
+		case 1: nhPtr = nhPtr+3;
 				tfSize=3;
 			break;
-		case 2: nh = nh+1;
+		case 2: nhPtr = nhPtr+1;
 				tfSize=1;
 			break;
 		case 3: break;
@@ -125,12 +125,12 @@ public IPHC_Data(byte[] ipv6data, byte[] l2sender, byte[] l2receiver) {
 			throw new IllegalArgumentException("IPHC Next header compression not yet implemented.");
 		}else{
 			nhSize=1;
-			nh++;
+			nhPtr++;
 		}
 		
 		if(hlim==0){
 			hlSize=1;
-			nh++;
+			nhPtr++;
 		}else{
 			throw new IllegalArgumentException("Hop limit compression not yet implemented");
 		}
@@ -142,9 +142,9 @@ public IPHC_Data(byte[] ipv6data, byte[] l2sender, byte[] l2receiver) {
 		//source address compression
 		if(sac==0){
 			switch(sam){
-			case 0: nh = nh + 16; break;
-			case 1:nh = nh+ 8;break;
-			case 2:nh = nh+2;break;
+			case 0: nhPtr = nhPtr + 16; break;
+			case 1:nhPtr = nhPtr+ 8;break;
+			case 2:nhPtr = nhPtr+2;break;
 			case 3:
 				//System.out.println("source from elided recomposition:");
 				//printRawHex(WSNManager.NETWORK_PREFIX);
@@ -154,17 +154,17 @@ public IPHC_Data(byte[] ipv6data, byte[] l2sender, byte[] l2receiver) {
 		} else{
 			switch(sam){
 			case 0:break;
-			case 1:nh = nh+8;break;
-			case 2:nh = nh+2;break;
+			case 1:nhPtr = nhPtr+8;break;
+			case 2:nhPtr = nhPtr+2;break;
 			case 3:	break;
 			}
 		}
 		//destination address compression
 		if(dac==0){
 			switch(dam){
-			case 0: nh = nh + 16; break;
-			case 1:nh = nh+ 8;break;
-			case 2:nh = nh+2;break;
+			case 0: nhPtr = nhPtr + 16; break;
+			case 1:nhPtr = nhPtr+ 8;break;
+			case 2:nhPtr = nhPtr+2;break;
 			case 3:
 				//both prefix and iid elided, prefix same as manager, iid derived from pseudo header passed as argument
 				destPrefix64 = WSNManager.NETWORK_PREFIX;
@@ -174,8 +174,8 @@ public IPHC_Data(byte[] ipv6data, byte[] l2sender, byte[] l2receiver) {
 		} else{
 			switch(dam){
 			case 0:break;
-			case 1:nh = nh+8;break;
-			case 2:nh = nh+2;break;
+			case 1:nhPtr = nhPtr+8;break;
+			case 2:nhPtr = nhPtr+2;break;
 			case 3:break;
 			}
 		}
@@ -194,9 +194,9 @@ public IPHC_Data(byte[] ipv6data, byte[] l2sender, byte[] l2receiver) {
 		
 		//System.out.println(_protocol);
 		//printRaw(ipv6data);
-		byte[] nextHeader= new byte[ipv6data.length-nh];
+		byte[] nextHeader= new byte[ipv6data.length-nhPtr];
 		for(int i = 0 ; i < nextHeader.length;i++){
-			nextHeader[i] = ipv6data[i+nh];
+			nextHeader[i] = ipv6data[i+nhPtr];
 		}
 		
 		_nextHeaderData = nextHeader;

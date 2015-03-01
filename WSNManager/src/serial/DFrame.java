@@ -36,7 +36,6 @@ public class DFrame extends Frame {
 			data.get(7);//asn 4
 			ipv6data = new byte[data.size()-10-16];
 			
-			
 			//For IPHC
 			byte[] l2receiver = new byte[8];
 			byte[] l2sender = new byte[8];
