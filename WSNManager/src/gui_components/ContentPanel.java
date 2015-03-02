@@ -1,5 +1,6 @@
 package gui_components;
 
+import java.awt.Dimension;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 
@@ -16,6 +17,7 @@ public class ContentPanel extends JPanel {
 	public ContentPanel() {
 		setLayout(new GridBagLayout());
 		setVisible(true);
+		this.setPreferredSize(new Dimension(400,600));
 	}
 
 	public void switchComponent(JComponent p) {
