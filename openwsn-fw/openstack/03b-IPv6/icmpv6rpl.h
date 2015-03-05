@@ -153,7 +153,7 @@ typedef struct {
 } icmpv6rpl_vars_t;
 
 //=========================== prototypes ======================================
-
+icmpv6rpl_vars_t* get_icmpv6rpl_vars(void);
 void     icmpv6rpl_init(void);
 void     icmpv6rpl_sendDone(OpenQueueEntry_t* msg, owerror_t error);
 void     icmpv6rpl_receive(OpenQueueEntry_t* msg);

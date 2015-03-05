@@ -27,10 +27,15 @@ void icmpv6rpl_timer_DAO_task(void);
 void sendDAO(void);
 
 //=========================== public ==========================================
-
+//temporary
+icmpv6rpl_vars_t* get_icmpv6rpl_vars(){
+return &icmpv6rpl_vars;
+}
+/////
 /**
 \brief Initialize this module.
 */
+
 void icmpv6rpl_init() {
    uint8_t         dodagid[16];
    

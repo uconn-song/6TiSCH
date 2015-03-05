@@ -1,6 +1,7 @@
 
     #include "opendefs.h"
     #include "c6t.h"
+#include "cexample.h"
 #include "cinfo.h"
 #include "cleds.h"
 #include "cwellknown.h"
@@ -11,6 +12,7 @@
 
     void openapps_init(void) {
        c6t_init();
+   cexample_init();
    cinfo_init();
    cleds__init();
    cwellknown_init();
