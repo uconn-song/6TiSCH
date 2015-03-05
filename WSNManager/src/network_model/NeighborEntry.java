@@ -36,7 +36,7 @@ public class NeighborEntry
     public byte joinPrio;
     
     private String _iid64Hex;
-
+   // coap://141592000013cb23/n GET
     public NeighborEntry(ArrayList<Byte> _data){
     	
     	row=_data.get(4);
@@ -101,6 +101,59 @@ public class NeighborEntry
         byte1 = (short)(byte1<<8);
         asn_0_1 = (short)(byte1 ^ byte2);
         joinPrio = _data.get(index);
+        
+        
+        
+        
+    }
+    
+    
+ public NeighborEntry(byte[] _data){
+    	
+    	row=_data[1]; //1
+        used=_data[2]; //2
+        
+        //if not used forget about parsing the rest of this message
+        if(used ==0)
+        	return;
+        
+        parentPreference=_data[3]; //3
+        stableNeighbor=_data[4]; //4
+        switchStabilityCounter=_data[5];//5
+        //addr_type=_data.get(9);
+        addr_type = 0x01;
+        int index = 10;
+        
+        for(int i = 0 ; i < 8;i++){
+        	addr_64b[i] = _data[i+7];
+        }
+        
+
+        _iid64Hex = "";
+        for(int i = 0 ; i < 8;i++){
+        	 _iid64Hex =  _iid64Hex + Integer.toHexString(( addr_64b[i]&0xFF));
+		}
+        
+        
+        short byte1 = (short)(_data[15]&0xFF);
+        short byte2 = (short)(_data[16]&0xFF);
+        byte1 = (short)(byte1<<8);
+        DAGrank = (short)(byte1 ^ byte2);
+        rssi = _data[17];
+        numRx = _data[18];
+        numTx = _data[19];
+        numTxACK = _data[20];
+        numWraps = _data[21];
+        asn_4 = _data[22];
+        byte1 = (short)(_data[23]&0xFF);
+        byte2 = (short)(_data[24]&0xFF);
+        byte1 = (short)(byte1<<8);
+        asn_2_3 = (short)(byte1 ^ byte2);
+        byte1 = (short)(_data[25]&0xFF);
+        byte2 = (short)(_data[26]&0xFF);
+        byte1 = (short)(byte1<<8);
+        asn_0_1 = (short)(byte1 ^ byte2);
+        joinPrio = _data[27];
         
         
         

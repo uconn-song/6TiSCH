@@ -252,6 +252,10 @@ public class ControlPanel extends JPanel implements ConsoleReader, SerialListene
 			if(((DFrame)collectedFrame).isCoAPMessage()){
 			 CoapMessage m = ((DFrame)collectedFrame).getCoAPMessage();
 			 _outputBot.append(m.getPayloadAsAscii());
+			 byte[] b = m.getPayload();
+			if(b[0]==(byte)110){
+				System.out.println(new NeighborEntry(b).toString());
+			}
 			}
 			
 		}else if(collectedFrame.getType().equals("Request")){

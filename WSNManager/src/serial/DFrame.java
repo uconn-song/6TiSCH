@@ -5,6 +5,7 @@ import jNetPcap.JPacketTest;
 import java.io.UnsupportedEncodingException;
 import java.rmi.UnexpectedException;
 import java.util.ArrayList;
+import java.util.Arrays;
 
 import packet.PacketAnalyzer;
 import packet.IPUtils;
@@ -67,7 +68,12 @@ public class DFrame extends Frame {
 					parseCoAP();
 				}
 			}else{
-				System.out.println("implement packet forwarding to alternate destinations");	
+				
+				System.out.println("implement packet forwarding to alternate destinations");
+				for(int i =0;i< _iphcData.destAddr64.length;i++){
+					System.out.print(Integer.toHexString(_iphcData.destAddr64[i]&0xFF));
+					
+				}System.out.println();
 				}
 			
 			/*Packet p = new Packet(ipv6data, PacketAnalyzer.NETWORK_LEVEL);

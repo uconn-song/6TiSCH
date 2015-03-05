@@ -12,7 +12,7 @@ import javax.xml.bind.DatatypeConverter;
 public class CoapMessage extends ByteMessage {
 	
 	private static HashMap<String,String> COAP_CODES = new HashMap<String,String>();
-	
+	public static int CONTENT_FLAG_NEIGHBOR = 0x110;
 	static{
 		COAP_CODES.put("2.1", "Created");
 		COAP_CODES.put("2.2", "Deleted");
@@ -281,6 +281,9 @@ public class CoapMessage extends ByteMessage {
 		        sb.append((char) _payload[i]);
 		    }
 		    return sb.toString();
+	}
+	public byte[] getPayload() {
+		return _payload;
 	}
 
 	// PAYLOAD

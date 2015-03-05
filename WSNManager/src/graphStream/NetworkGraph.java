@@ -73,7 +73,7 @@ public class NetworkGraph extends MultiGraph implements NetworkObserver {
 			 //view = viewer.addDefaultView(false);
 			
 		}catch(org.graphstream.graph.IdAlreadyInUseException e){
-			System.out.println("edge exists, no change");
+			//System.out.println("edge exists, no change");
 		}
 	}
 	
