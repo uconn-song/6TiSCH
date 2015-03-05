@@ -15,10 +15,12 @@ import javax.swing.JFrame;
 import javax.swing.JPanel;
 
 
+import network_model.NeighborEntry;
 import network_model.WSNManager;
 
 import serial.DFrame;
 import serial.Frame;
+import serial.SFrame;
 import jssc.SerialPort;
 import jssc.SerialPortException;
 import jssc.SerialPortList;
@@ -235,6 +237,16 @@ public class ControlPanel extends JPanel implements ConsoleReader, SerialListene
 	public void acceptFrame(Frame collectedFrame) {
 		if(collectedFrame.getType().equals("Status")){
 			_outputTop.append(collectedFrame.toString()+ "\n");
+			SFrame f = (SFrame)collectedFrame;
+			if(f._statusType.startsWith("9")){
+				
+				NeighborEntry e = f.parseNeighbors();
+				if(e.used==1)
+				_outputBot.append(e.getiid64Hex()+"\n");
+			}else if(!SFrame.ROOT_SET&&f._statusType.startsWith("1")){
+				f.getRootPrefix(_connectionManager);
+			}
+			
 		}else if(collectedFrame.getType().equals("Data")){
 			_outputBot.append(collectedFrame.toString()+"\n");
 			if(((DFrame)collectedFrame).isCoAPMessage()){

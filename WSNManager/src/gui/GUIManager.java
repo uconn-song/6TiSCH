@@ -7,25 +7,30 @@ import java.awt.Color;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
+import java.util.HashMap;
 
 import javax.swing.JComponent;
 import javax.swing.JFrame;
 import javax.swing.JMenu;
 import javax.swing.JMenuBar;
 import javax.swing.WindowConstants;
+import javax.swing.text.View;
+
+import network_model.NetworkObserver;
 
 import org.graphstream.ui.layout.Layout;
 import org.graphstream.ui.layout.springbox.implementations.SpringBox;
 
-public class GUIManager extends JFrame {
+public class GUIManager extends JFrame{
 
 	private ContentPanel _contentArea = new ContentPanel();
 	private ContentPanel _secondaryContentArea = new ContentPanel();
 	private ControlPanel _controlPanel;
-
+	private HashMap<String,JComponent> _panels = new HashMap<String,JComponent>();
 	// Menu
 	private JMenuBar _menu;
-	private NetworkGraph _graph = new NetworkGraph("embedded");
+	private NetworkGraph _graph;
+	ContentPanel _graphPanel = new ContentPanel();
 
 	
 	public GUIManager(ControlPanel p) {
@@ -58,53 +63,67 @@ public class GUIManager extends JFrame {
 		getContentPane().add(_secondaryContentArea, c);
 		getContentPane().setBackground(Color.DARK_GRAY);
 		
-		
+		initializeGraph();
 		pack();
 		setVisible(true);
 		setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
+		_panels.put("control panel", _controlPanel);
+		switchPanel1("control panel");
+		switchPanel2("graph");
 		
-		switchPanel1("cp");
-		switchPanel2("gs");
-		
-		
-		 Layout layout = new SpringBox(false);
+		    
+	}
+
+	
+	
+	private void initializeGraph() {
+		_graph = new NetworkGraph("embedded");
+	/*	Layout layout = new SpringBox(false);
 		    _graph.addSink(layout);
 		    layout.addAttributeSink(_graph);
 		    while(layout.getStabilization() < 0.9){
 		        layout.compute();
-		    }   
+		    }   */
 		    
-		    _graph.addNode("cbfc");
-		    _graph.addNode("cbfc");
-		    _graph.addNode("2616");
-		    _graph.addEdge("cbfc2616", "cbfc", "2616");
-		    _secondaryContentArea.switchComponent(_graph.getView());
+		org.graphstream.ui.swingViewer.View v = _graph.getView();
+//		v.getCamera().setViewPercent(1.2);
+//		v.getCamera().setViewCenter(0, 0, 0);
+//		v.getCamera().setAutoFitView(true);
+		_graphPanel.switchComponent(_graph.getView());
+		addComponent("graph",_graphPanel);
+		
 	}
 
-	private void switchPanel2(String component) {
-		switch (component) {
-		case "cp":
-			_secondaryContentArea.switchComponent(_controlPanel);
-			pack();
-			break;
-		case "gs":
-			_secondaryContentArea.switchComponent(_graph.getView());
-			pack();
-		default:
-			break;
+
+	public void switchPanel2(String component) {
+		try{
+		_secondaryContentArea.switchComponent(_panels.get(component));
+		}
+		catch(NullPointerException e){
+			//do nothing do not switch 
 		}
 		
 	}
 
 	public void switchPanel1(String component) {
-		switch (component) {
-		case "cp":
-			_contentArea.switchComponent(_controlPanel);
-			pack();
-			break;
-		default:
-			break;
+		try{
+			_contentArea.switchComponent(_panels.get(component));
 		}
+			catch(NullPointerException e){
+				
+			}
 	}
 
+
+
+	public void addComponent(String string, JComponent c) {
+		_panels.put(string, c);
+		
+	}
+
+
+
+	public NetworkGraph getGraph() {
+		return _graph;
+	}
 }

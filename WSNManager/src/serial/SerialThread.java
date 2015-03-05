@@ -84,8 +84,12 @@ public class SerialThread extends Thread{
 	//data.
 	private void captureByte(Byte b) throws UnsupportedEncodingException, Exception
 	{
+		//Serial buffer size is no larger than 256 according to the
+		//firmware
+		if(_readBuffer.size()> 256) closeFrame();
 		if (b!=126){  //byte is not 0x73 so add data
 		    _readBuffer.add(b);
+			
 		}else if(!_readBuffer.isEmpty() && b==126){  //end of frame
 				closeFrame();
 		}

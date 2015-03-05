@@ -3,6 +3,10 @@ package network_model;
 
 import java.util.Arrays;
 
+import org.graphstream.ui.layout.Layout;
+import org.graphstream.ui.layout.springbox.implementations.SpringBox;
+
+import graphStream.NetworkGraph;
 import gui.ControlPanel;
 import gui.GUIManager;
 
@@ -27,15 +31,21 @@ public class WSNManager{
 	//In order to keep track of multiple serial connections, keep a hash map of portname ("COM7") as key and a pair {port,thread} as value
 	private LBRConnection _LBRConnection;
 	private ControlPanel _controlPanel;
-	private NetworkModel _networkModel;
+	private GUIManager _guiManager;
+	private  NetworkModel _networkModel = new NetworkModel();
 	public static byte[] NETWORK_PREFIX = new byte[]{0,0,0,0,0,0,0,0};
-	public static byte[] ROOT_ID = new byte[8];
+	public static  byte[] ROOT_ID = new byte[8];
+	public static String ROOT_ID_HEX="";
 	public WSNManager() throws SerialPortException
 	{
 		_controlPanel = new ControlPanel(this);
-		new GUIManager(_controlPanel);
+		_guiManager = new GUIManager(_controlPanel);
+		_networkModel.addObserver(_guiManager.getGraph());
+		_guiManager.switchPanel2("graph");
+	
 	}
   
+	
 
 	public static void main(String[] args) throws SerialPortException {  
 		//new NetworkInterfaceEnumerator().ListInterfaces();
@@ -81,12 +91,14 @@ public class WSNManager{
 		
 	}
 	
-	/**
+	/****************************************************************
 	 * Here is where we register components to listen to the data received from LBR
 	 * This method is called when adding a connection to a serial port.
-	 */
+	 ***************************************************************/
 	private void addComponentsListeningOnSerial() {
 		_LBRConnection.addSerialListener("_controlPanel", _controlPanel);
+		_LBRConnection.addSerialListener("Network Model", _networkModel);
+		
 	}
 
 	public void closeConnection() {
@@ -145,4 +157,19 @@ public class WSNManager{
 				}
 			}
 		}
+
+
+		public void setRoot(byte[] b) {
+			ROOT_ID = b;
+			String rootid64Hex = "";
+			for(int i = 0 ; i<b.length;i++){
+				rootid64Hex = rootid64Hex +Integer.toHexString( b[i]&0xFF);
+			}
+			ROOT_ID_HEX = rootid64Hex;
+			_networkModel.setRoot(rootid64Hex);
+			
+		}
+
+
+		
 }  

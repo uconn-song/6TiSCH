@@ -1,5 +1,6 @@
 package network_model;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 
 /**
@@ -33,9 +34,82 @@ public class NeighborEntry
     public short asn_2_3;
     public short asn_0_1;
     public byte joinPrio;
+    
+    private String _iid64Hex;
 
-    public NeighborEntry(){}
+    public NeighborEntry(ArrayList<Byte> _data){
+    	
+    	row=_data.get(4);
+        used=_data.get(5);
+        
+        //if not used forget about parsing the rest of this message
+        if(used ==0)
+        	return;
+        
+        parentPreference=_data.get(6);
+        stableNeighbor=_data.get(7);
+        switchStabilityCounter=_data.get(8);
+        //addr_type=_data.get(9);
+        addr_type = 0x01;
+        int index = 10;
+        switch(addr_type)
+        {
+            case 0x00: //2
+                addr_16b = _data.subList(10,12).toArray(addr_16b);
+                index = 13;
+                break;
+            case 0x01: //8
+                addr_64b = _data.subList(10,18).toArray(addr_64b);
+                index = 19;
+                break;
+            case 0x02: //16
+                addr_128b = _data.subList(10,26).toArray(addr_128b);
+                index = 27;
+                break;
+            case 0x03: //2
+                panid = _data.subList(10,12).toArray(panid);
+                index = 13;
+                break;
+            case 0x04: //8
+                prefix = _data.subList(10,18).toArray(prefix);
+                index = 19;
+                break;
+        }
 
+        _iid64Hex = "";
+        for(int i = 0 ; i < 8;i++){
+        	 _iid64Hex =  _iid64Hex + Integer.toHexString(( addr_64b[i]&0xFF));
+		}
+        
+        
+        short byte1 = (short)(_data.get(index++)&0xFF);
+        short byte2 = (short)(_data.get(index++)&0xFF);
+        byte1 = (short)(byte1<<8);
+        DAGrank = (short)(byte1 ^ byte2);
+        rssi = _data.get(index++);
+        numRx = _data.get(index++);
+        numTx = _data.get(index++);
+        numTxACK = _data.get(index++);
+        numWraps = _data.get(index++);
+        asn_4 = _data.get(index++);
+        byte1 = (short)(_data.get(index++)&0xFF);
+        byte2 = (short)(_data.get(index++)&0xFF);
+        byte1 = (short)(byte1<<8);
+        asn_2_3 = (short)(byte1 ^ byte2);
+        byte1 = (short)(_data.get(index++)&0xFF);
+        byte2 = (short)(_data.get(index++)&0xFF);
+        byte1 = (short)(byte1<<8);
+        asn_0_1 = (short)(byte1 ^ byte2);
+        joinPrio = _data.get(index);
+        
+        
+        
+        
+    }
+
+    public String getiid64Hex(){
+    	return _iid64Hex;
+    }
     @Override
     public String toString()
     {
@@ -44,7 +118,7 @@ public class NeighborEntry
         ret = ret + "\nused: " + used;
         ret = ret + "\nparentPreference: " + parentPreference;
         ret = ret + "\nstableNeighbor: " + stableNeighbor;
-        ret = ret + "\nswitchStabilityCounter: " + switchStabilityCounter;
+        ret = ret + "\nswitchStabilityCounter: " + switchStabilityCounter+ "\n";
 
 
 

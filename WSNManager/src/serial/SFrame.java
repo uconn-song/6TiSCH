@@ -1,7 +1,6 @@
 package serial;
 
 import network_model.NeighborEntry;
-import network_model.NeighborTable;
 import network_model.WSNManager;
 
 import java.util.ArrayList;
@@ -39,17 +38,6 @@ public class SFrame extends Frame {
 			break;
 		case 1:
 			_statusType = "1 ID";
-			if(_data.get(4)==(byte)1&&!ROOT_SET){
-				for(int i = 0 ; i<8;i++){
-					WSNManager.ROOT_ID[i] = _data.get(i+9);
-				}
-				//System.out.println("I AM ROOT");
-				for(int i = 0 ; i<8;i++){
-					System.out.print(Integer.toHexString(WSNManager.ROOT_ID[i]&0xFF));
-				}
-				System.out.println();
-				ROOT_SET=true;
-			}
 			_toStringMessage = "SFrame handle debugIDManagerEntry_t";
 			break;
 		case 2:
@@ -83,61 +71,7 @@ public class SFrame extends Frame {
 			break;
 		case 9:
 			_statusType = "9 NEIGHBORS";
-			_toStringMessage = "SFrame decode debugNeighborEntry_t";
-            NeighborEntry neighbor = new NeighborEntry();
-            NeighborTable table = new NeighborTable();
-            neighbor.row=_data.get(4);
-            neighbor.used=_data.get(5);
-            neighbor.parentPreference=_data.get(6);
-            neighbor.stableNeighbor=_data.get(7);
-            neighbor.switchStabilityCounter=_data.get(8);
-            neighbor.addr_type=_data.get(9);
-            int index = 10;
-            switch(neighbor.addr_type)
-            {
-                case 0x00: //2
-                    neighbor.addr_16b = _data.subList(10,12).toArray(neighbor.addr_16b);
-                    index = 13;
-                    break;
-                case 0x01: //8
-                    neighbor.addr_64b = _data.subList(10,18).toArray(neighbor.addr_64b);
-                    index = 19;
-                    break;
-                case 0x02: //16
-                    neighbor.addr_128b = _data.subList(10,26).toArray(neighbor.addr_128b);
-                    index = 27;
-                    break;
-                case 0x03: //2
-                    neighbor.panid = _data.subList(10,12).toArray(neighbor.panid);
-                    index = 13;
-                    break;
-                case 0x04: //8
-                    neighbor.prefix = _data.subList(10,18).toArray(neighbor.prefix);
-                    index = 19;
-                    break;
-            }
-
-            short byte1 = (short)(_data.get(index++)&0xFF);
-            short byte2 = (short)(_data.get(index++)&0xFF);
-            byte1 = (short)(byte1<<8);
-            neighbor.DAGrank = (short)(byte1 ^ byte2);
-            neighbor.rssi = _data.get(index++);
-            neighbor.numRx = _data.get(index++);
-            neighbor.numTx = _data.get(index++);
-            neighbor.numTxACK = _data.get(index++);
-            neighbor.numWraps = _data.get(index++);
-            neighbor.asn_4 = _data.get(index++);
-            byte1 = (short)(_data.get(index++)&0xFF);
-            byte2 = (short)(_data.get(index++)&0xFF);
-            byte1 = (short)(byte1<<8);
-            neighbor.asn_2_3 = (short)(byte1 ^ byte2);
-            byte1 = (short)(_data.get(index++)&0xFF);
-            byte2 = (short)(_data.get(index++)&0xFF);
-            byte1 = (short)(byte1<<8);
-            neighbor.asn_0_1 = (short)(byte1 ^ byte2);
-            neighbor.joinPrio = _data.get(index);
-            table.addRow(neighbor);
-          //  System.out.println(neighbor.toString());
+			_toStringMessage = "SFrame debugNeighborEntry_t";
 			break;
 		case 10:
 			_statusType = "10 KAPERIOD ? ";
@@ -150,6 +84,34 @@ public class SFrame extends Frame {
 			
 		}
 	}
+	
+	
+	/** 
+	 * @return NeighborEntry method for getting the DAG root neighbors
+	 */
+	public NeighborEntry parseNeighbors(){
+		if(!_statusType.startsWith("9")) throw new IllegalArgumentException(" can't parse " + _statusType + " as neighbor entry");
+         return new NeighborEntry(_data);
+	}
+	
+	/**
+	 * on message with status type 1 set the root prefix
+	 */
+	public void getRootPrefix(WSNManager m){
+		if(_data.get(4)==(byte)1&&!ROOT_SET){
+			byte[] b = new byte[8];
+			for(int i = 0 ; i<8;i++){
+				b[i] = _data.get(i+9);
+			}
+			m.setRoot(b);
+			//System.out.println("I AM ROOT");
+			ROOT_SET=true;
+		}
+	}
+	
+	
+	
+	
 	private byte[] toByteArray(ArrayList<Byte> list)
     {
 		//TODO:Implement method
