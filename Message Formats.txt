@@ -1,0 +1,64 @@
+
+Choosing what is sent to the console as output
+----------------------------------------------
+ControlPanel is where the two console outputs are managed, they are the variables _outputTop and _outputBot.
+To add messages to them it is similar to System.out.print() you just need to use _outputBot/Top.append(String s)
+Since ControlPanel implements SerialListener all serial frames, and therefore all CoAP messages are also sent to the ControlPanel.
+See below for how to parse Serial Frames and CoAP messages.
+
+Seial Message Parsing
+---------------------
+serial messages are parsed in the SerialListener thread which is associated with the port you are currently listening on.
+depending on the flag at the beginning of the serial message, different types of serial messages are constructed. These all subclass serial frame.
+These messages are received by all components implementing SerialListener which are added to the list of listening components in the 
+addComponentsListeningOnSerial() method in the WSNManager. 
+
+How to receive CoAP messages:
+	-have your class implement serial listener, and make sure that it is added to the list of classes listening on the serial thread from addComponentsListeningOnSerial()
+	-the acceptFrame method will accept all frames but you just need to check for frames matching the type DFrame
+	-check that the DFrame is a CoAP message by casting the frame to DFrame (once its type is verified) and calling isCoAPMessage() on it.
+	-call getCoAPMessage to return a parsed CoAP message.
+	-call getPayload() to return the CoAP payload as a byte[] *** note that this excludes the payload marker 0xFF ***
+	
+	
+Message Format Definitions
+--------------------------
+D frame payload format:
+		-> id of mote connected (root) (2B)
+		-> next 5 bytes ASN information
+		//end metadata, next part is internet packet information
+		-> mote id destination (8B)
+		-> mote id source (8B) 
+		-> iphc header 
+		-> ipv6 non-elided fields  (in order of specification of ipv6)
+		-> UDP header (16)
+		-> CoAP header
+		-> CoAP payload
+
+		
+CoAP message construction hints:
+	when sending coap message types in the firmware make sure that if it is not the response to a get message that you set the type to 
+	
+	 // send
+   outcome = opencoap_send(
+      pkt,					  //the message with the payload
+      COAP_TYPE_NON, 		  //confirmable or not
+      COAP_CODE_RESP_CONTENT, //message code
+      1,					  //token length
+      &cexample_vars.desc
+   );
+   
+   // avoid overflowing the queue if fails
+   if (outcome==E_FAIL) {
+      openqueue_freePacketBuffer(pkt);
+   
+   
+CoAP Message Payload Formats:
+		CoAP messages sent should have the first payload byte as 0xFF as specified in the RFC.
+		Please do not add CoAP options, just put all the information in the payload if you can.
+		The next payload byte should be a flag indicating what type of message it is.
+		These flags we defined as:
+		'n' or dec 110 represents a neighbor entry. The payload (including flags) can be parsed by the NeighborEntry class in Java. It results in the same neighbor entry as the one parsed by serial frame.
+		'd' neighbor table delete function. The payload should contain the flags 0xFF and 'd' , followed by the 8 byte address of the mote to remove from the neighbor table. The mote address who is deleting the neighbor should be derived from the source address of the CoAP message sent.
+		
+		
