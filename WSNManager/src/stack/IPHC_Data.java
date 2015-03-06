@@ -87,6 +87,7 @@ private String _protocol;
  */
 public IPHC_Data(byte[] ipv6data, byte[] l2sender, byte[] l2receiver) {
 	//assume all possible fields elided, next header starts at byte 2
+	//System.out.println("ipch header: " + byteToString(ipv6data[0])+byteToString(ipv6data[1]));
 		int nhPtr=2;
 		int tfSize=0;
 		int nhSize=0;
@@ -142,10 +143,29 @@ public IPHC_Data(byte[] ipv6data, byte[] l2sender, byte[] l2receiver) {
 		//source address compression
 		if(sac==0){
 			switch(sam){
-			case 0: nhPtr = nhPtr + 16; break;
-			case 1:nhPtr = nhPtr+ 8;break;
+			case 0: 
+				//next header pointer pointing at the start of source address
+				for(int i = 0 ; i < 16;i++){
+					srcAddr128[i] = ipv6data[i+nhPtr];
+				}
+				nhPtr = nhPtr + 16; break;
+			case 1:
+				for(int i = 0 ; i < 8;i++){
+					srcAddr128[i] = WSNManager.NETWORK_PREFIX[i];
+				}
+				for(int i = 0 ; i < 8;i++){
+					srcAddr128[i+8] = ipv6data[i+nhPtr];
+				}
+				nhPtr = nhPtr+ 8;break;
 			case 2:nhPtr = nhPtr+2;break;
 			case 3:
+				for(int i = 0 ; i < 8;i++){
+					srcAddr128[i] = WSNManager.NETWORK_PREFIX[i];
+				}
+				for(int i = 0 ; i < 8;i++){
+					srcAddr128[i+8] = l2sender[i];
+				}
+				
 				//System.out.println("source from elided recomposition:");
 				//printRawHex(WSNManager.NETWORK_PREFIX);
 				//printRawHex(l2sender);
@@ -162,8 +182,23 @@ public IPHC_Data(byte[] ipv6data, byte[] l2sender, byte[] l2receiver) {
 		//destination address compression
 		if(dac==0){
 			switch(dam){
-			case 0: nhPtr = nhPtr + 16; break;
-			case 1:nhPtr = nhPtr+ 8;break;
+			case 0: //pointer currently pointing at start of destination address
+				for(int i = 0; i < 8;i++){
+					destPrefix64[i] = ipv6data[i+nhPtr];
+				}
+				nhPtr = nhPtr+8;
+				
+				for(int i = 0 ; i <8;i++){
+					destAddr64[i] = ipv6data[i+nhPtr];
+				}
+				nhPtr = nhPtr + 8;
+				break;
+			case 1:
+				destPrefix64 = WSNManager.NETWORK_PREFIX;
+				for(int i = 0 ; i <8;i++){
+					destAddr64[i] = ipv6data[i+nhPtr];
+				}
+				nhPtr = nhPtr+ 8;break;
 			case 2:nhPtr = nhPtr+2;break;
 			case 3:
 				//both prefix and iid elided, prefix same as manager, iid derived from pseudo header passed as argument
@@ -194,6 +229,8 @@ public IPHC_Data(byte[] ipv6data, byte[] l2sender, byte[] l2receiver) {
 		
 		//System.out.println(_protocol);
 		//printRaw(ipv6data);
+		
+		//parse out the next header
 		byte[] nextHeader= new byte[ipv6data.length-nhPtr];
 		for(int i = 0 ; i < nextHeader.length;i++){
 			nextHeader[i] = ipv6data[i+nhPtr];
@@ -206,6 +243,28 @@ public IPHC_Data(byte[] ipv6data, byte[] l2sender, byte[] l2receiver) {
 		
 }
 
+
+/**
+ * derive the 64 bit euid from the 128b source address
+ */
+public byte[] getSrcAddr64(){
+	byte[] b = new byte[8];
+	for(int i = 0; i<8;i++){
+		b[i] = srcAddr128[i+8];
+	}
+	return b;
+}
+
+/**
+ * return the source mote iid as 64b hex string
+ */
+public String getSrc64bAsHexString(){
+	String s = "";
+	for(int i = 0 ; i < 8 ; i++){
+		s=s+ Integer.toHexString(( srcAddr128[i+8]&0xFF));
+	}
+	return s;
+}
 /**
  * Used in analyzing received packet, if true then this message was meant to be parsed by the manager.
  * @return

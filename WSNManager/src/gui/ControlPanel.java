@@ -98,14 +98,6 @@ public class ControlPanel extends JPanel implements ConsoleReader, SerialListene
 				}
 				
 			}
-			//need to add port to the following commands
-			else if(text.startsWith("set baudrate "))
-			{
-				_console.printString("not yet implemented");
-				//int baud = Integer.parseInt(text.split(" ")[2]);
-				//SerialPort p = _ports.get(text.split(" ")[3]).getPort();
-				//setBaudrate(baud,p);
-			}
 			else if(text.equals("close connection"))
 			{
 				String openPort = _connectionManager.getPortName();
@@ -130,11 +122,11 @@ public class ControlPanel extends JPanel implements ConsoleReader, SerialListene
 			{
 				//String d = "coap://151592000016c076/i GET";
 				handleCoAP(text);
-			}
-			else{
+			}else{
 				_console.printString("Unrecognized Command {" + text+"}");
 			}
 		}catch(NullPointerException e){
+			System.out.println(" Null Pointer Exception");
 			printSerialDevicePorts();
 			printOpenPorts();
 		}catch(IllegalFormatException e){
@@ -177,7 +169,6 @@ public class ControlPanel extends JPanel implements ConsoleReader, SerialListene
     		finalMessage[i+9] = hcArr[i];
     	}
     	_connectionManager.send(finalMessage);
-		System.out.println("sent");
 	}
 
 	private void customMessage() {
@@ -233,28 +224,34 @@ public class ControlPanel extends JPanel implements ConsoleReader, SerialListene
 		if(!_connectionManager.send(message))_console.printString("Buffer Full");
 	}
 
-	//Receive from Mote
+	//Receive all frames from Mote
 	public void acceptFrame(Frame collectedFrame) {
 		if(collectedFrame.getType().equals("Status")){
-			_outputTop.append(collectedFrame.toString()+ "\n");
+			//_outputTop.append(collectedFrame.toString()+ "\n");
 			SFrame f = (SFrame)collectedFrame;
 			if(f._statusType.startsWith("9")){
 				
 				NeighborEntry e = f.parseNeighbors();
-				if(e.used==1)
-				_outputBot.append(e.getiid64Hex()+"\n");
+				//if(e.used==1)
+				//_outputBot.append(e.getiid64Hex()+"\n");
 			}else if(!SFrame.ROOT_SET&&f._statusType.startsWith("1")){
 				f.getRootPrefix(_connectionManager);
 			}
 			
 		}else if(collectedFrame.getType().equals("Data")){
-			_outputBot.append(collectedFrame.toString()+"\n");
+			_outputTop.append(collectedFrame.toString()+"\n");
 			if(((DFrame)collectedFrame).isCoAPMessage()){
 			 CoapMessage m = ((DFrame)collectedFrame).getCoAPMessage();
-			 _outputBot.append(m.getPayloadAsAscii());
+			 
 			 byte[] b = m.getPayload();
-			if(b[0]==(byte)110){
-				System.out.println(new NeighborEntry(b).toString());
+		
+			 char c = (char)(b[0]&0xFF);
+			if(c=='n'){
+				NeighborEntry e = new NeighborEntry(b);
+				String s = e.getiid64Hex();
+				_outputBot.append(e.row + " " + s +"\n");
+			}else{
+				_outputBot.append(m.getPayloadAsAscii());
 			}
 			}
 			

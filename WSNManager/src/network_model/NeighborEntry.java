@@ -107,7 +107,10 @@ public class NeighborEntry
         
     }
     
-    
+   /**
+    * neighbor entry constructor for CoAP payload
+    * @param _data
+    */
  public NeighborEntry(byte[] _data){
     	
     	row=_data[1]; //1
@@ -174,25 +177,25 @@ public class NeighborEntry
         ret = ret + "\nswitchStabilityCounter: " + switchStabilityCounter+ "\n";
 
 
-
-        switch(addr_type)
-        {
-            case 0x00: //2
-            	ret = ret + " addr_16 " + byteArrayToString(addr_16b,"hex");
-                break;
-            case 0x01: //8
+//
+//        switch(addr_type)
+//        {
+//            case 0x00: //2
+//            	ret = ret + " addr_16 " + byteArrayToString(addr_16b,"hex");
+//                break;
+//            case 0x01: //8
             	ret = ret + "  addr 64b  " + byteArrayToString(addr_64b,"hex");
-                break;
-            case 0x02: //16
-            	ret = ret + "  addr 128b  " + byteArrayToString(addr_128b, "hex");
-                break;
-            case 0x03: //2
-            	ret = ret+ "  panid " + Arrays.toString(panid);  
-                break;
-            case 0x04: //8
-            	ret = ret + "  prefix  " + Arrays.toString(prefix);
-                break;
-        }
+//                break;
+//            case 0x02: //16
+//            	ret = ret + "  addr 128b  " + byteArrayToString(addr_128b, "hex");
+//                break;
+//            case 0x03: //2
+//            	ret = ret+ "  panid " + Arrays.toString(panid);  
+//                break;
+//            case 0x04: //8
+//            	ret = ret + "  prefix  " + Arrays.toString(prefix);
+//                break;
+//        }
         ret = ret + "\nDAGrank: " + DAGrank;
         ret = ret + "\nrssi: " + rssi;
         ret = ret + "\nnumRx: " + numRx;

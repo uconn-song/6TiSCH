@@ -57,6 +57,7 @@ public class DFrame extends Frame {
 			}
 		
 			//decompress from iphc to derive ipv6 fields
+			System.out.println();
 			_iphcData = new IPHC_Data(ipv6data,l2sender,l2receiver);
 			_protocol = _iphcData.getNextHeaderProtocol();
 			_L3_payload = _iphcData.getNextHeader();
@@ -192,6 +193,13 @@ public class DFrame extends Frame {
 				// every 4 bytes new line
 			}
 			System.out.println();
+		}
+
+		/**
+		 * used to retrieve source mote for neighbor table
+		 */
+		public String getSrcMoteId64Hex() {
+			return _iphcData.getSrc64bAsHexString();
 		}
 		
 }

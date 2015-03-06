@@ -102,7 +102,11 @@ public class CoapMessage extends ByteMessage {
 		byte code = toParse[1];
 		int codeA = (code & 0b11100000)>>5;
 		int codeB = code & 0b00011111;
-		if(codeA != 2) throw new IllegalArgumentException( "COAP ERROR : " + COAP_CODES.get(codeA+"."+codeB));
+		printRaw(toParse);
+		if(codeA ==0){
+			System.out.println("get post put implement in coapMessage parsing");
+		}
+		else if(codeA != 2) throw new IllegalArgumentException( "COAP ERROR : " + COAP_CODES.get(codeA+"."+codeB));
 		
 		int MessageID = toParse[2]<<8+toParse[3];
 		//System.out.println(MessageID);
@@ -133,11 +137,16 @@ public class CoapMessage extends ByteMessage {
 			}
 		}
 		
+		
+		
+	/*
 		if(_payload.length>0){
 			System.out.println("CoAP Payload: [Binary:{");
 			this.printRaw(_payload);
 			System.out.println("}\nASCII: {"+ getPayloadAsAscii()+ "} \n] ");
 		}
+		
+		*/
 	}
 	
 	//Constructors for building CoAP Messages

@@ -92,22 +92,14 @@ public class UDP_Datagram {
 		}
 		
 		_checksum = _checksum ^ 0xFFFF;
-		
-		//System.out.println(byteToString((byte) ((_checksum >> 8) & 0xFF))
-		//		+ byteToString((byte) (_checksum & 0xFF)));
-	}
+		}
 
 	private void checksumIteration(int b) {
-	//	System.out.println();
-	//	System.out.println(byteToString((byte) ((b >> 8) & 0xFF))
-	//			+ byteToString((byte) (b & 0xFF)));
-	//	System.out.println(byteToString((byte) ((_checksum >> 8) & 0xFF))
-	//			+ byteToString((byte) (_checksum & 0xFF)));
+
 		_checksum = _checksum + b;
 		if ((_checksum & 0b1_0000000000000000) != 0) {
 			_checksum = (_checksum & 0xFFFF) + 1;
 		}
-	//	System.out.println(byteToString((byte) ((_checksum >> 8) & 0xFF))	+ byteToString((byte) (_checksum & 0xFF)));
 	}
 
 	

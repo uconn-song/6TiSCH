@@ -60,6 +60,17 @@ public class NetworkGraph extends MultiGraph implements NetworkObserver {
 		}
 	}
 	
+	/**
+	 * remove a node and all edges associated with it from the graph
+	 */
+	public MoteNode removeNode(String moteIID){
+		try{
+			return super.removeNode(moteIID);
+		}catch(org.graphstream.graph.ElementNotFoundException e){
+			System.out.println("tried to remove " + moteIID + ", but it was not in the graph");
+			return null;
+		}
+	}
 	
 	/**add an edge based on the two mote ids with the name being the concatenation of the
 	 * base mote with the neighbor mote
@@ -79,11 +90,16 @@ public class NetworkGraph extends MultiGraph implements NetworkObserver {
 	
 	//TODO:Add edge removal
 	@Override
-	public void notifyEdgeUpdate(String iid64hex_base, String iid64hex_neighbor) {
+	public void removeNeighbor(String iid64, String iid64_neighbor){
+			removeEdge(iid64,iid64_neighbor);
+	}
+	@Override
+	public void notifyAddEdge(String iid64hex_base, String iid64hex_neighbor) {
 			addEdge(iid64hex_base,iid64hex_neighbor);
 	}
 	@Override
 	public void newMoteNotification(String iid64hex) {
 			addNode(iid64hex);
 	}
+	
 }

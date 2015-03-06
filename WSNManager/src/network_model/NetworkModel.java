@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
 
+import serial.DFrame;
 import serial.Frame;
 import serial.SFrame;
 import serial.SerialListener;
@@ -33,12 +34,10 @@ public class NetworkModel implements SerialListener {
 	}
 
 	/**
-	 * method to update the table for a specific mote
+	 * method to add neighbor to a specific mote.
 	 */
 	public void updateTableForMote(String id64hex, String id64HexNeighbor,
 			NeighborEntry entry) {
-		
-	
 			Mote base = _motes.get(id64hex);
 			Mote neighbor  = _motes.get(id64HexNeighbor);
 			if(neighbor!=null){
@@ -47,13 +46,12 @@ public class NetworkModel implements SerialListener {
 				addNewMote(id64HexNeighbor);
 			}
 			if(base!=null){
-				notifyEdgeUpdate(id64hex, id64HexNeighbor);
+				notifyAddEdge(id64hex, id64HexNeighbor);
 			}else{
 				System.out.println("adding mote to network table " + id64hex);
 				addNewMote(id64hex);
 				updateTableForMote(id64hex, id64HexNeighbor, entry);	
 			}
-			
 	}
 
 	/**
@@ -78,9 +76,9 @@ public class NetworkModel implements SerialListener {
 	/**
 	 * notify the network graph of an edge update
 	 */
-	public void notifyEdgeUpdate(String iid64hex_base, String iid64hex_neighbor) {
+	public void notifyAddEdge(String iid64hex_base, String iid64hex_neighbor) {
 		for (int i = 0; i < _networkObservers.size(); i++) {
-			_networkObservers.get(i).notifyEdgeUpdate(iid64hex_base,
+			_networkObservers.get(i).notifyAddEdge(iid64hex_base,
 					iid64hex_neighbor);
 		}
 	}
@@ -109,7 +107,27 @@ public class NetworkModel implements SerialListener {
 					updateTableForMote(_rootid64Hex,entry.getiid64Hex(),entry);
 				}
 			}
+		}else if(collectedFrame.getType().equals("Data")){
+			DFrame f = (DFrame)collectedFrame;
+			if(f.isCoAPMessage()){
+				String sourceMote = f.getSrcMoteId64Hex();
+				byte[] coapPayload = f.getCoAPMessage().getPayload();
+				int flag = coapPayload[0]&0xFF;
+				if(flag==110)// 'n', then this is a neighbor entry
+				{
+					NeighborEntry e = new NeighborEntry(coapPayload);
+					System.out.println(e.toString());
+					if(e.used==1){
+						System.out.println("neighbors " + sourceMote + " " + e.getiid64Hex());
+						updateTableForMote(sourceMote,e.getiid64Hex(),e);
+					}
+				}else if (flag==100){ //'d'
+					//neighbor table delete message
+					
+				}
+			}
 		}
+		//TODO: Implement delete functions for the 
 	}
 
 }

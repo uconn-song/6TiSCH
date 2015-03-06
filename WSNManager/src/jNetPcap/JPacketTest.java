@@ -20,8 +20,6 @@ public class JPacketTest {
 	}
 	
 	public JPacketTest(byte[] b){
-		
-		
 		JPacket tmpP= new JMemoryPacket(Ip6.ID, b); // Will scan as well 
 		System.out.println("Packet : \n" + tmpP.toHexdump());  
 		System.out.println("Decoded : \n" + tmpP.toString());

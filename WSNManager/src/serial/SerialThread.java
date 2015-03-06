@@ -127,8 +127,7 @@ public class SerialThread extends Thread{
 	 */
 	private Frame parseInputBuffer() throws Exception, UnsupportedEncodingException
 	{
-		byte[] b = new byte[]{_readBuffer.get(0)};
-		String type = new String(b, "UTF-8");
+		String type = new String(new byte[]{_readBuffer.get(0)}, "UTF-8");
 		//build a frame based on the type flag
 			switch(type){
 			case "S":
@@ -141,7 +140,15 @@ public class SerialThread extends Thread{
 				return new DFrame(_readBuffer);
 			case "I":
 				return new IFrame(_readBuffer);
+			case "N":
+				return new RootNeighborFrame(_readBuffer);
 			default:
+				System.out.println("Frame code "+ _readBuffer.get(0));
+				
+				if((int)_readBuffer.get(0)==0){
+					kill();
+				}
+				_readBuffer.clear();
 				throw(new Exception(type + " unsupported"));
 			}		
 	}
