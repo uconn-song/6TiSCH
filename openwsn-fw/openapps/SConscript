@@ -16,7 +16,7 @@ defaultApps   = [
     'uecho',
     'rrt',
     'neighbor_table',
-#'cexample',
+'cexample',
 ]
 if localEnv['board']=='python':
     defaultApps  += [
