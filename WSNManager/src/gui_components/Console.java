@@ -36,9 +36,9 @@ public class Console extends JPanel {
 	private ScrollableTextArea _registersArea;
 	private ScrollableTextArea _dataMem;
 	private GridBagLayout _layout = new GridBagLayout();
-	private ConsoleReader _commandListener;
+	private ConsoleCommandListener _commandListener;
 
-	public Console(ConsoleReader cl) {
+	public Console(ConsoleCommandListener cl) {
 		_commandListener = cl;
 		this.setLayout(_layout);
 		this.setBackground(Color.DARK_GRAY);
@@ -184,14 +184,8 @@ public class Console extends JPanel {
 					console.setText("coap://");
 				}else if(selected.equals("set root")){
 					console.setText("set root");
-				}else if (selected.startsWith("set baud")) {
-					console.setText("set baudrate ");
-				}else if (selected.startsWith("echo")) {
-					console.setText("echo_");
 				}else if (selected.equals("close all")) {
 					console.setText("close all");
-				}else if (selected.startsWith("close ")) {
-					console.setText("close connection");
 				}else {
 					console.setText((String) list.getSelectedValue());
 				}
