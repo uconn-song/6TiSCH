@@ -39,10 +39,9 @@ public class WSNManager{
 	public WSNManager() throws SerialPortException
 	{
 		_controlPanel = new ControlPanel(this);
-		_guiManager = new GUIManager(_controlPanel);
+		_guiManager = new GUIManager(_controlPanel,_networkModel);	
 		_networkModel.addObserver(_guiManager.getGraph());
 		_guiManager.switchPanel2("graph");
-	
 	}
   
 	
@@ -51,8 +50,11 @@ public class WSNManager{
 		//new NetworkInterfaceEnumerator().ListInterfaces();
     	new WSNManager();
     }
-    
+   
 	
+	public NetworkModel getNetworkModel(){
+		return _networkModel;
+	}
 
 	/**Send message to the DAG root
 	 * @param message

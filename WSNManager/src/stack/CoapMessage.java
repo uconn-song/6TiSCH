@@ -40,12 +40,7 @@ public class CoapMessage extends ByteMessage {
 		COAP_CODES.put("5.5", "Proxying Not Supported");
 	}
 			
-	
-	
-	
-	
-	
-	
+		
 	
 	private int _verMask =  0b11000000;
 	private byte _ver =     0b01000000; // version 1 always, bit 0 and 1
@@ -83,11 +78,12 @@ public class CoapMessage extends ByteMessage {
 	
 	
 	/**
-	 * Constructor for parsing CoAP Message
+	 * Constructor for parsing CoAP Message received from motes
 	 * @param toParse the byte array to parse
 	 */
 	public CoapMessage(byte[] toParse){
 		//printRaw(toParse);
+		
 		parseCoAPMessage(toParse);
 	}
 	private void parseCoAPMessage(byte[] toParse) {
@@ -149,7 +145,11 @@ public class CoapMessage extends ByteMessage {
 		*/
 	}
 	
-	//Constructors for building CoAP Messages
+	/**
+	 * Constructors for building CoAP Messages
+	 * @param type
+	 * @param coapURI
+	 */
 
 	public CoapMessage(String type, String coapURI) {
 		_GLBmessageID = _GLBmessageID++ % 65535;
@@ -175,18 +175,16 @@ public class CoapMessage extends ByteMessage {
 	 * in firware DESTIID like "14159200000d2616" one string all 8 bytes must be
 	 * represented (0 as 00)
 	 * 
-	 * @param type
+	 * @param type (GET/PUT/ETC)
 	 * @param URIPath
-	 * @param DestIID
+	 * @param DestIID 64B address in hex string format (pad bytes to be 2 characters each so 0->00)
+	 * @param payload payload for the CoAP message must be under 46? bytes
 	 */
-	public CoapMessage(String type, String URIPath, String DestIID) {
+	public CoapMessage(String type, String URIPath, String DestIID, byte[] payload) {
 
 		_GLBmessageID = _GLBmessageID++ % 65535;
-
-	
 		_token = 1;
-		_messageID = _GLBmessageID;
-
+		_messageID = _GLBmessageID; //make sure that acknowledgments have the same message id on the way back
 		switch (type) {
 		case "GET":
 			_Code = 0b000_00001;
@@ -199,7 +197,6 @@ public class CoapMessage extends ByteMessage {
 		if (DestIID.length() == 16) {
 			// try to parse address
 			_destIID64 = DatatypeConverter.parseHexBinary(DestIID);
-			// printRaw(_destIID64);
 		} else {
 			System.out.println("ERROR IN ADDR LENGTH");
 		}
@@ -260,14 +257,16 @@ public class CoapMessage extends ByteMessage {
 			b[index] = _options.get(i);
 			index++;
 		}
-
+		
+		//check if payload is empty, add bytes if not
 		if (_payload.length > 0) {
 			index++;
 			b[index] = (byte) 0b11111111;
-		}
-		for (int i = 0; i < _payload.length; i++) {
-			b[index] = _payload[i];
-			index++;
+			//add payload bytes to the message
+			for (int i = 0; i < _payload.length; i++) {
+				b[index] = _payload[i];
+				index++;
+			}
 		}
 		_message = b;
 	}

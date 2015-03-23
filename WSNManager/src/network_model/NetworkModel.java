@@ -36,7 +36,7 @@ public class NetworkModel implements SerialListener {
 	/**
 	 * method to add neighbor to a specific mote.
 	 */
-	public void updateTableForMote(String id64hex, String id64HexNeighbor,
+	public void addNeighbor(String id64hex, String id64HexNeighbor,
 			NeighborEntry entry) {
 			Mote base = _motes.get(id64hex);
 			Mote neighbor  = _motes.get(id64HexNeighbor);
@@ -50,7 +50,7 @@ public class NetworkModel implements SerialListener {
 			}else{
 				System.out.println("adding mote to network table " + id64hex);
 				addNewMote(id64hex);
-				updateTableForMote(id64hex, id64HexNeighbor, entry);	
+				addNeighbor(id64hex, id64HexNeighbor, entry);	
 			}
 	}
 
@@ -82,7 +82,16 @@ public class NetworkModel implements SerialListener {
 					iid64hex_neighbor);
 		}
 	}
-
+	
+	/**
+	 * remove the second mote id from the neighbor table of the first mote id
+	 */
+	public void notifyDeleteNeighbor(String iid64, String iid64Neighbor){
+		for (int i = 0; i < _networkObservers.size(); i++) {
+			_networkObservers.get(i).removeNeighbor(iid64, iid64Neighbor);
+		}
+	}
+	
 	/**
 	 * @return an iterator over the motes connected to the network
 	 */
@@ -90,44 +99,50 @@ public class NetworkModel implements SerialListener {
 		return _motes.values().iterator();
 	}
 
-	// public void updateNeighbor(String moteiid, int row, )
+	public Mote getMote(String id){
+		return _motes.get(id);
+	}
+	//public void updateNeighbor(String moteiid, int row, )
 
 	@Override
 	public void acceptFrame(Frame collectedFrame) {
 		if(!_rootset) return;
-		//confirm status frame
+		//For the case where the dag root is passing along a neighbor notification
 		if (collectedFrame.getType().equals("Status")) {
 			SFrame f = (SFrame) collectedFrame;
 			//confirm neighbor entry
 			if (f._statusType.startsWith("9")) {
 				NeighborEntry entry = f.parseNeighbors();
+				//add neighbor if this row is used
 				if (entry.used == 1) {
-					//System.out.println(entry.toString());
-					//System.out.println(entry.getiid64Hex());
-					updateTableForMote(_rootid64Hex,entry.getiid64Hex(),entry);
+					addNeighbor(_rootid64Hex,entry.getiid64Hex(),entry);
 				}
 			}
+		//For the case where the neighbor information is being passed along via CoAP message
 		}else if(collectedFrame.getType().equals("Data")){
+			//asset Data frame
 			DFrame f = (DFrame)collectedFrame;
+			//assert CoAP message
 			if(f.isCoAPMessage()){
+				//derive source id from the data frame
 				String sourceMote = f.getSrcMoteId64Hex();
 				byte[] coapPayload = f.getCoAPMessage().getPayload();
 				int flag = coapPayload[0]&0xFF;
 				if(flag==110)// 'n', then this is a neighbor entry
 				{
 					NeighborEntry e = new NeighborEntry(coapPayload);
-					System.out.println(e.toString());
+					//add neighbor if this row is used
 					if(e.used==1){
-						System.out.println("neighbors " + sourceMote + " " + e.getiid64Hex());
-						updateTableForMote(sourceMote,e.getiid64Hex(),e);
+						addNeighbor(sourceMote,e.getiid64Hex(),e);
 					}
 				}else if (flag==100){ //'d'
+					System.out.println("TODO: NetworkModule implement delete");
+					
 					//neighbor table delete message
 					
 				}
 			}
-		}
-		//TODO: Implement delete functions for the 
+		} 
 	}
 
 }

@@ -14,6 +14,10 @@ import packet.PacketAnalyzer.Packet;
 import stack.CoapMessage;
 import stack.IPHC_Data;
 import stack.UDP_Datagram;
+/**
+ * Data frame sent by the mote, this can include messages for the manager, RPL messages forwarded from the network,
+ * and messages which are meant to be forwarded out of the network.
+ */
 public class DFrame extends Frame {
 
 		//This frame is used by the mote to indicate to the computer it is ready to receive data.
@@ -63,17 +67,17 @@ public class DFrame extends Frame {
 			_L3_payload = _iphcData.getNextHeader();
 			
 			//check if the packet is meant for this mote
-			//TODO: implement forwarding to other motes
+			
 			if(_iphcData.isDestinationRoot()){
 				if(_protocol.equals("UDP")){
 					parseCoAP();
 				}
 			}else{
-				
+				//TODO: implement forwarding to the internet. Construct regular ipv6 packet here?
+				//or convert to ipv4 destination?
 				System.out.println("implement packet forwarding to alternate destinations");
 				for(int i =0;i< _iphcData.destAddr64.length;i++){
 					System.out.print(Integer.toHexString(_iphcData.destAddr64[i]&0xFF));
-					
 				}System.out.println();
 				}
 			

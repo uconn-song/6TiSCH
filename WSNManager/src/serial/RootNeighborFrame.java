@@ -2,6 +2,10 @@ package serial;
 
 import java.util.ArrayList;
 
+/**
+ * The dag root cannot run CoAP applications, so we use custom serial messages to update neighbor information.
+ *
+ */
 public class RootNeighborFrame extends Frame {
 	public RootNeighborFrame(ArrayList<Byte> data) {
 		setType("RootNeighbor");

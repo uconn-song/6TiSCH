@@ -1,20 +1,18 @@
 package gui;
 
 import gui_components.Console;
-import gui_components.ConsoleReader;
-import gui_components.CustomPacketBuilder;
+import gui_components.ConsoleCommandListener;
 import gui_components.ScrollableTextArea;
 
 import java.awt.Color;
-import java.awt.Dimension;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.util.IllegalFormatException;
 
-import javax.swing.JFrame;
 import javax.swing.JPanel;
 
 
+import network_model.CoAPBuilder;
 import network_model.NeighborEntry;
 import network_model.WSNManager;
 
@@ -29,7 +27,7 @@ import stack.CoapMessage;
 import stack.IPHC_Data;
 import stack.UDP_Datagram;
 
-public class ControlPanel extends JPanel implements ConsoleReader, SerialListener{
+public class ControlPanel extends JPanel implements ConsoleCommandListener, SerialListener{
 	SerialPort _port;
 	//holds a map with portname as key and a pair {port,thread} as value
 	//private HashMap<String,PortListenerPair> _ports = new HashMap<String,PortListenerPair>();
@@ -86,17 +84,12 @@ public class ControlPanel extends JPanel implements ConsoleReader, SerialListene
 				printSerialDevicePorts();
 				printOpenPorts();
 			}
-			else if(text.startsWith("listen ")){
+			else if(text.startsWith("listen "))
+			{
 				String portName = text.split(" ")[1];
-				
-				//now we have a port which is opened and a thread which is listening
-			
 				try {
 					_connectionManager.addConnection(portName);
-				} catch (SerialPortException e) {
-					_console.printString( e.getMessage());
-				}
-				
+				} catch (SerialPortException e) {	_console.printString( e.getMessage());	}
 			}
 			else if(text.equals("close connection"))
 			{
@@ -107,15 +100,12 @@ public class ControlPanel extends JPanel implements ConsoleReader, SerialListene
 				}else{
 					_console.printString("No connections were open\n");
 				}	
-			}else if(text.startsWith("echo_")){
-				String portName = text.split(" ")[0].split("_")[1];
-				buildEchoPacket(text.substring(text.indexOf(' ')+1),portName);
-			}else if(text.equals("set root")){
+			}
+			else if(text.equals("set root"))
+			{
 				setRoot();
 			}
-			else if(text.equals("custom packet")){
-				customMessage();
-			}else if(text.equals("clear all")){
+			else if(text.equals("clear all")){
 				_outputTop.setText("");
 				_outputBot.setText("");
 			} else if (text.startsWith("coap://"))
@@ -135,11 +125,17 @@ public class ControlPanel extends JPanel implements ConsoleReader, SerialListene
 			_console.printString("Error executing command {"+ text+"}");
 		} 
 	}
+	
 	private void setRoot() {
-		byte[] data = new byte[]{(byte) "R".charAt(0),(byte)"Y".charAt(0),0,0,0,0,0,0,0,0};
+		byte[] data = new byte[]{(byte) "R".charAt(0),(byte)"Y".charAt(0),1,1,1,1,1,1,1,1};
 		_connectionManager.send(data);
 	}
 
+	/**
+	 * Accept a coap string with the form coap://[8B address in hex (16 characters)] /[resource path] GET
+	 * TODO: add support for put
+	 * @param text
+	 */
 	private void handleCoAP(String text) {
 		// coap://151592000016c076/i GET
 		
@@ -149,38 +145,11 @@ public class ControlPanel extends JPanel implements ConsoleReader, SerialListene
 		
 		String resource = iidResourcePair[1].split(" ")[0];
 		String method = iidResourcePair[1].split(" ")[1];
-		CoapMessage m = new CoapMessage(method,resource, iid);
 		
-		//m.printRaw(m.getMessage());
-		UDP_Datagram d = new UDP_Datagram(m);
-		//d.printRaw(d.getMessage());
-		IPHC_Data hc = new IPHC_Data(d);
-		//hc.printRaw(hc.getMessage());
-		
-		//now we have iphc all we need to do is append 64 bit address and send
-		byte[] hcArr = hc.getMessage();
-		byte[] dest = hc.destAddr64;
-		byte[] finalMessage = new byte[hcArr.length+9];
-		finalMessage[0] = (byte) ("D".charAt(0)&0xFF);
-		for(int i = 0;i<8;i++){
-			finalMessage[i+1] = dest[i];
-		}
-    	for(int i = 0; i< hcArr.length;i++){
-    		finalMessage[i+9] = hcArr[i];
-    	}
-    	_connectionManager.send(finalMessage);
+    	_connectionManager.send(new CoAPBuilder().getSerialPacket(method, resource, iid, null));
 	}
 
-	private void customMessage() {
-		JFrame f = new JFrame();
-		f.setLayout(new GridBagLayout());
-		GridBagConstraints c = new GridBagConstraints();
-		c.weightx=1.0;
-		c.weighty=1.0;
-		f.add(new CustomPacketBuilder(_connectionManager),c);
-		f.pack();
-		f.setVisible(true);
-	}
+
 	
 	//print a list of ports which are active
 	private void printOpenPorts(){
@@ -202,29 +171,8 @@ public class ControlPanel extends JPanel implements ConsoleReader, SerialListene
 	}
 
 	
-	private void buildEchoPacket(String mess, String portName) {
-		//size of message bytes = #characters + 1 for "S" flag
-		byte[] data = new byte[mess.length()+1];
-		data[0]=(byte) "S".charAt(0);			
-		//convert string to byte[]
-		for(int i = 0; i < mess.length();i++)
-		{
-			data[i+1]=(byte)mess.charAt(i);
-		}
-		sendToBuffer(data);
-	}
-	
-
-	
-	/**
-	 * send an arbitrary message stored in a byte array to the LBR
-	 * @param data
-	 */
-	private void sendToBuffer(byte[] message) {
-		if(!_connectionManager.send(message))_console.printString("Buffer Full");
-	}
-
-	//Receive all frames from Mote
+	//This class implements SerialListener, this is where the serial frames are handled and printed
+	@Override
 	public void acceptFrame(Frame collectedFrame) {
 		if(collectedFrame.getType().equals("Status")){
 			//_outputTop.append(collectedFrame.toString()+ "\n");
@@ -237,7 +185,6 @@ public class ControlPanel extends JPanel implements ConsoleReader, SerialListene
 			}else if(!SFrame.ROOT_SET&&f._statusType.startsWith("1")){
 				f.getRootPrefix(_connectionManager);
 			}
-			
 		}else if(collectedFrame.getType().equals("Data")){
 			_outputTop.append(collectedFrame.toString()+"\n");
 			if(((DFrame)collectedFrame).isCoAPMessage()){
@@ -263,4 +210,38 @@ public class ControlPanel extends JPanel implements ConsoleReader, SerialListene
 		}
 	}
 	
+	
+	
+	/*
+	private void customMessage() {
+		JFrame f = new JFrame();
+		f.setLayout(new GridBagLayout());
+		GridBagConstraints c = new GridBagConstraints();
+		c.weightx=1.0;
+		c.weighty=1.0;
+		f.add(new CustomPacketBuilder(_connectionManager),c);
+		f.pack();
+		f.setVisible(true);
+	}
+	
+	/*
+	 * send an arbitrary message stored in a byte array to the LBR
+	 * @param data
+	 /
+	private void sendToBuffer(byte[] message) {
+		if(!_connectionManager.send(message))_console.printString("Buffer Full");
+	}
+	
+	  	private void buildEchoPacket(String mess, String portName) {
+		//size of message bytes = #characters + 1 for "S" flag
+		byte[] data = new byte[mess.length()+1];
+		data[0]=(byte) "S".charAt(0);			
+		//convert string to byte[]
+		for(int i = 0; i < mess.length();i++)
+		{
+			data[i+1]=(byte)mess.charAt(i);
+		}
+		sendToBuffer(data);
+	}
+	 */
 }

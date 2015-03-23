@@ -35,7 +35,9 @@ public class NetworkGraph extends MultiGraph implements NetworkObserver {
 		
 		
 	}
-	
+	public Viewer getViewer(){
+		return viewer;
+	}
 	public View getView(){
 		return view;
 	}

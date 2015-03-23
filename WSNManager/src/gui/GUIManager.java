@@ -1,5 +1,6 @@
 package gui;
 
+import graphStream.Clicks;
 import graphStream.NetworkGraph;
 import gui_components.ContentPanel;
 
@@ -11,15 +12,10 @@ import java.util.HashMap;
 
 import javax.swing.JComponent;
 import javax.swing.JFrame;
-import javax.swing.JMenu;
-import javax.swing.JMenuBar;
 import javax.swing.WindowConstants;
-import javax.swing.text.View;
 
-import network_model.NetworkObserver;
-
-import org.graphstream.ui.layout.Layout;
-import org.graphstream.ui.layout.springbox.implementations.SpringBox;
+import network_model.NetworkModel;
+import network_model.WSNManager;
 
 public class GUIManager extends JFrame{
 
@@ -27,17 +23,15 @@ public class GUIManager extends JFrame{
 	private ContentPanel _secondaryContentArea = new ContentPanel();
 	private ControlPanel _controlPanel;
 	private HashMap<String,JComponent> _panels = new HashMap<String,JComponent>();
-	// Menu
-	private JMenuBar _menu;
 	private NetworkGraph _graph;
-	ContentPanel _graphPanel = new ContentPanel();
+	private ContentPanel _graphPanel;
 
 	
-	public GUIManager(ControlPanel p) {
+	public GUIManager(ControlPanel p, NetworkModel _networkModel) {
 		_controlPanel = p;
 		setLayout(new GridBagLayout());
 		GridBagConstraints c = new GridBagConstraints();
-		c.weightx = 1.0;
+	/*	c.weightx = 1.0;
 		c.weighty = 0.2;
 		c.gridx = 0;
 		c.gridy = 0;
@@ -48,7 +42,7 @@ public class GUIManager extends JFrame{
 
 		_menu.add(new JMenu("SDF"));
 		add(_menu, c);
-
+	*/
 		// add main content area (left)
 		c.weightx = 0.5;
 		c.weighty = 0.9;
@@ -62,8 +56,8 @@ public class GUIManager extends JFrame{
 		c.gridx = 1;
 		getContentPane().add(_secondaryContentArea, c);
 		getContentPane().setBackground(Color.DARK_GRAY);
-		
-		initializeGraph();
+		//need to add reference to the manager so it can respond to clicks
+		initializeGraph(_networkModel);
 		pack();
 		setVisible(true);
 		setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
@@ -71,13 +65,14 @@ public class GUIManager extends JFrame{
 		switchPanel1("control panel");
 		switchPanel2("graph");
 		
-		    
 	}
 
 	
 	
-	private void initializeGraph() {
+	private void initializeGraph(NetworkModel _networkModel) {
 		_graph = new NetworkGraph("embedded");
+		
+		_graphPanel = new GraphPanel(_graph,_networkModel);
 	/*	Layout layout = new SpringBox(false);
 		    _graph.addSink(layout);
 		    layout.addAttributeSink(_graph);
@@ -85,16 +80,23 @@ public class GUIManager extends JFrame{
 		        layout.compute();
 		    }   */
 		    
-		org.graphstream.ui.swingViewer.View v = _graph.getView();
+	
 //		v.getCamera().setViewPercent(1.2);
 //		v.getCamera().setViewCenter(0, 0, 0);
 //		v.getCamera().setAutoFitView(true);
-		_graphPanel.switchComponent(_graph.getView());
+		
 		addComponent("graph",_graphPanel);
+		
+		
+		_graph.addNode("cbfc");
+		
+		
 		
 	}
 
-
+	/**
+	 * choose which JPanel to view on the right panel
+	 */
 	public void switchPanel2(String component) {
 		try{
 		_secondaryContentArea.switchComponent(_panels.get(component));
@@ -104,7 +106,11 @@ public class GUIManager extends JFrame{
 		}
 		
 	}
-
+	
+	/**
+	 * Choose which JPanel to view on the left panel
+	 * @param component
+	 */
 	public void switchPanel1(String component) {
 		try{
 			_contentArea.switchComponent(_panels.get(component));
@@ -114,8 +120,11 @@ public class GUIManager extends JFrame{
 			}
 	}
 
-
-
+	/**
+	 * register a component with the gui manager
+	 * @param string
+	 * @param c
+	 */
 	public void addComponent(String string, JComponent c) {
 		_panels.put(string, c);
 		
