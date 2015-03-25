@@ -54,12 +54,12 @@ public class UDP_Datagram {
 		
 		_checksum = _checksum ^ 0xFFFF;
 		
-		System.out.println(_checksum);
+		//System.out.println(_checksum);
 		int check = (b[6]&0xFF)<<8|(b[7]&0xFF);
-		System.out.println(check);
+	//	System.out.println(check);
 		
 		
-		printRaw(b);
+		//printRaw(b);
 		
 		//System.out.println(byteToString((byte) ((_checksum >> 8) & 0xFF))
 		//		+ byteToString((byte) (_checksum & 0xFF)));

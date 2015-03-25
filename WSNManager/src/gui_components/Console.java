@@ -145,6 +145,7 @@ public class Console extends JPanel {
 	public void printString(String text) {
 		_output.append(text);
 		_output.append("\n");
+		
 	}
 
 	public void update(int[] reg, Map<String, String> data) {

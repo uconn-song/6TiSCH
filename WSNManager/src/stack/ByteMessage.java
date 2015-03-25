@@ -20,7 +20,7 @@ public void setBit(int byteIndex, int positionFromLeft){
 	}
 	byte newByte = (byte) (message.get(byteIndex)^(1<<(7-positionFromLeft)));
 	message.set(byteIndex, newByte);	
-	printRaw();
+	//printRaw();
 }
 
 /**
@@ -36,7 +36,7 @@ private void clearBit(int byteIndex, int positionFromLeft){
 	
 	byte newByte = (byte) (message.get(byteIndex)&(0b11111111^1<<(7-positionFromLeft)));
 	message.set(byteIndex, newByte);	
-	printRaw();
+	//printRaw();
 }
 /**
  * @param byteIndex starting from 0

@@ -40,18 +40,26 @@ public class NetworkModel implements SerialListener {
 			NeighborEntry entry) {
 			Mote base = _motes.get(id64hex);
 			Mote neighbor  = _motes.get(id64HexNeighbor);
+			//make sure the neighbor exists otherwise create a mote for it
 			if(neighbor!=null){
 			}else{
-				System.out.println("adding neighbor mote to network table" + id64hex);
+				System.out.println("adding neighbor mote to network table. Mote:" + id64hex + ", neighbor:" + id64HexNeighbor);
 				addNewMote(id64HexNeighbor);
+				neighbor = _motes.get(id64HexNeighbor);
 			}
+			//check to make sure the base mote exits in the mote hashmap, if it exits add an edge between the two
 			if(base!=null){
-				notifyAddEdge(id64hex, id64HexNeighbor);
 			}else{
+				//otherwise add the base to the table, and 
 				System.out.println("adding mote to network table " + id64hex);
-				addNewMote(id64hex);
-				addNeighbor(id64hex, id64HexNeighbor, entry);	
+				addNewMote(id64hex);	
+				base = _motes.get(id64hex);
 			}
+			//add edge to the graph
+			notifyAddEdge(id64hex, id64HexNeighbor);
+			//add neighbor mote to the internal neighbor table
+			base.updateTable(id64HexNeighbor, entry);
+			
 	}
 
 	/**
@@ -107,8 +115,10 @@ public class NetworkModel implements SerialListener {
 	@Override
 	public void acceptFrame(Frame collectedFrame) {
 		if(!_rootset) return;
-		//For the case where the dag root is passing along a neighbor notification
+		
+		//Serial Frame level
 		if (collectedFrame.getType().equals("Status")) {
+			//For the case where the DAG root is passing along a neighbor notification
 			SFrame f = (SFrame) collectedFrame;
 			//confirm neighbor entry
 			if (f._statusType.startsWith("9")) {
@@ -137,9 +147,7 @@ public class NetworkModel implements SerialListener {
 					}
 				}else if (flag==100){ //'d'
 					System.out.println("TODO: NetworkModule implement delete");
-					
 					//neighbor table delete message
-					
 				}
 			}
 		} 

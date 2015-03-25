@@ -113,15 +113,16 @@ public class DFrame extends Frame {
 				 * a hack to attempt to parse message as CoAP assuming checksum elided...no other way to check that
 				 * right now
 				 */
+				System.out.println("Illegal Argument Exception");
 				if(e.getMessage().equals("wrong CoAP version")){
 					try{
-						printRaw(_L3_payload);
+						//printRaw(_L3_payload);
 						byte[] coapMess2 = new byte[_L3_payload.length-6];
 						
 						for(int i =0;i<_L3_payload.length-6;i++){
 							coapMess2[i] = _L3_payload[i+6];
 						}
-						System.out.println("coap mess attempt 2"); printRaw(coapMess2);
+						System.out.println("coap mess attempt 2"); //printRaw(coapMess2);
 						_CoAPMessage = new CoapMessage(coapMess2);
 						_isCoAP_DFrame = true;
 					}catch(IllegalArgumentException e2){

@@ -116,7 +116,7 @@ public class ControlPanel extends JPanel implements ConsoleCommandListener, Seri
 				_console.printString("Unrecognized Command {" + text+"}");
 			}
 		}catch(NullPointerException e){
-			System.out.println(" Null Pointer Exception");
+		//	System.out.println(" Null Pointer Exception");
 			printSerialDevicePorts();
 			printOpenPorts();
 		}catch(IllegalFormatException e){
@@ -174,6 +174,7 @@ public class ControlPanel extends JPanel implements ConsoleCommandListener, Seri
 	//This class implements SerialListener, this is where the serial frames are handled and printed
 	@Override
 	public void acceptFrame(Frame collectedFrame) {
+		//Serial Frame level messages
 		if(collectedFrame.getType().equals("Status")){
 			//_outputTop.append(collectedFrame.toString()+ "\n");
 			SFrame f = (SFrame)collectedFrame;
@@ -185,21 +186,25 @@ public class ControlPanel extends JPanel implements ConsoleCommandListener, Seri
 			}else if(!SFrame.ROOT_SET&&f._statusType.startsWith("1")){
 				f.getRootPrefix(_connectionManager);
 			}
+		//Application Layer level messages
 		}else if(collectedFrame.getType().equals("Data")){
 			_outputTop.append(collectedFrame.toString()+"\n");
+			
+			//if CoAP message
 			if(((DFrame)collectedFrame).isCoAPMessage()){
-			 CoapMessage m = ((DFrame)collectedFrame).getCoAPMessage();
-			 
-			 byte[] b = m.getPayload();
-		
-			 char c = (char)(b[0]&0xFF);
-			if(c=='n'){
-				NeighborEntry e = new NeighborEntry(b);
-				String s = e.getiid64Hex();
-				_outputBot.append(e.row + " " + s +"\n");
-			}else{
-				_outputBot.append(m.getPayloadAsAscii());
-			}
+				CoapMessage m = ((DFrame)collectedFrame).getCoAPMessage(); 
+				byte[] b = m.getPayload();
+				char c = (char)(b[0]&0xFF);
+				
+				if(c=='n'){
+					NeighborEntry e = new NeighborEntry(b);
+					String s = e.getiid64Hex();
+					_outputBot.append(e.row + " " + s +"\n");
+				}else if(c=='u'){
+					_outputBot.append("mote table updated" + "\n");					
+				}else{
+					_outputBot.append(m.getPayloadAsAscii()+ "\n");
+				}
 			}
 			
 		}else if(collectedFrame.getType().equals("Request")){

@@ -1,21 +1,18 @@
 package gui;
 
-import graphStream.Clicks;
+
 import graphStream.NetworkGraph;
 import gui_components.ContentPanel;
-
 import java.awt.Color;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
 import java.util.HashMap;
-
 import javax.swing.JComponent;
 import javax.swing.JFrame;
 import javax.swing.WindowConstants;
-
 import network_model.NetworkModel;
-import network_model.WSNManager;
+
 
 public class GUIManager extends JFrame{
 
@@ -86,9 +83,6 @@ public class GUIManager extends JFrame{
 //		v.getCamera().setAutoFitView(true);
 		
 		addComponent("graph",_graphPanel);
-		
-		
-		_graph.addNode("cbfc");
 		
 		
 		

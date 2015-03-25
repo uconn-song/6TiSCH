@@ -243,7 +243,7 @@ public class CoapMessage extends ByteMessage {
 	
 	
 	/**
-	 * build CoAP message from information provided
+	 * reconstruct CoAP message and parameters from information provided
 	 */
 	private void buildMessage() {
 		byte[] b = new byte[4 + _TKL + _options.size() + _payload.length];

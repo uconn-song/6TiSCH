@@ -30,4 +30,7 @@ public class Mote
     public void updateTable(String id64HexNeighbor, NeighborEntry neighbor){
     	_neighbors.put(id64HexNeighbor, neighbor);
     }
+    public HashMap<String,NeighborEntry> getNeighborTable(){
+    	return _neighbors;
+    }
 }
