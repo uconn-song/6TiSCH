@@ -75,6 +75,7 @@ public class DFrame extends Frame {
 			}else{
 				//TODO: implement forwarding to the internet. Construct regular ipv6 packet here?
 				//or convert to ipv4 destination?
+				printRaw(ipv6data);
 				System.out.println("implement packet forwarding to alternate destinations");
 				for(int i =0;i< _iphcData.destAddr64.length;i++){
 					System.out.print(Integer.toHexString(_iphcData.destAddr64[i]&0xFF));

@@ -98,7 +98,7 @@ public class CoapMessage extends ByteMessage {
 		byte code = toParse[1];
 		int codeA = (code & 0b11100000)>>5;
 		int codeB = code & 0b00011111;
-		printRaw(toParse);
+		//printRaw(toParse);
 		if(codeA ==0){
 			System.out.println("get post put implement in coapMessage parsing");
 		}
@@ -190,7 +190,7 @@ public class CoapMessage extends ByteMessage {
 			_Code = 0b000_00001;
 			break;
 		default:
-			throw new IllegalArgumentException(type
+				throw new IllegalArgumentException(type
 					+ " not implemented, message not parsed");
 		}
 		newURIPathOption(URIPath);
