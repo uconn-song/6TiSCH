@@ -7,12 +7,21 @@ import java.util.ArrayList;
  *
  */
 public class RootNeighborFrame extends Frame {
+	private String address;
 	public RootNeighborFrame(ArrayList<Byte> data) {
 		setType("RootNeighbor");
 		setData(data);	
 		//first payload byte should be the type for this message
 		//type P - put frame, add the neighbor for the root
 		//type D - remove specified address from the root's neighbor
-		System.out.println("implement root neighbor frame");
+		 address = "";
+		for (int i =0;i<8;i++){
+			address = address + Integer.toHexString(data.get(i+1)&0xFF);
 		}
+		System.out.println("implement root neighbor frame " + address);
+	}
+	
+	public String getRemovedNeighborID(){
+		return address;
+	}
 }

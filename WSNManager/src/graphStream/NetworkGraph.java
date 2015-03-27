@@ -23,7 +23,7 @@ public class NetworkGraph extends MultiGraph implements NetworkObserver {
 		addAttribute("ui.quality");
 		addAttribute("ui.antialias");
 		String stylesheet = "node { size: 20px; fill-color: rgb(50,50,150); text-size:20;}" +
-				"edge { fill-color: rgb(50,250,50); size: 2px; }" +
+				"edge { fill-color: rgb(50,250,50),red; size: 2px; }" +
 				"edge.cut { fill-color: rgba(200,200,200,128); }";
 		addAttribute("ui.stylesheet",stylesheet);
 		//viewer = display(false);
@@ -80,20 +80,24 @@ public class NetworkGraph extends MultiGraph implements NetworkObserver {
 	 */
 	public void addEdge(String moteIIDbase, String moteIIDneighbor){
 		try{
-			addEdge(moteIIDbase+moteIIDneighbor, moteIIDbase,moteIIDneighbor,true); 
+			addEdge(moteIIDbase+moteIIDneighbor, moteIIDbase,moteIIDneighbor,true).addAttribute("stability", "stable"); 
 			//viewer = new Viewer(this, Viewer.ThreadingModel.GRAPH_IN_ANOTHER_THREAD);
 			//viewer.enableAutoLayout();
 			 //view = viewer.addDefaultView(false);
 			
 		}catch(org.graphstream.graph.IdAlreadyInUseException e){
 			//System.out.println("edge exists, no change");
+			this.getEdge(moteIIDbase+moteIIDneighbor).addAttribute("ui.style", "fill-color:green;");
 		}
 	}
 	
 	//TODO:Add edge removal
 	@Override
 	public void removeNeighbor(String iid64, String iid64_neighbor){
-			removeEdge(iid64,iid64_neighbor);
+			//getEdge(iid64,iid64_neighbor);
+			this.getEdge(iid64 + iid64_neighbor).addAttribute("ui.style", "fill-color:red;");
+			getEdge(iid64 + iid64_neighbor).addAttribute("stability", "unstable");
+			//removeEdge(iid64,iid64_neighbor);
 	}
 	@Override
 	public void notifyAddEdge(String iid64hex_base, String iid64hex_neighbor) {

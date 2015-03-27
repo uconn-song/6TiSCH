@@ -6,6 +6,7 @@ import java.util.Iterator;
 
 import serial.DFrame;
 import serial.Frame;
+import serial.RootNeighborFrame;
 import serial.SFrame;
 import serial.SerialListener;
 
@@ -150,7 +151,12 @@ public class NetworkModel implements SerialListener {
 					//neighbor table delete message
 				}
 			}
-		} 
+		}else if(collectedFrame.getType().equals("RootNeighbor")){
+			String removedNeighbor = ((RootNeighborFrame)collectedFrame).getRemovedNeighborID();
+			System.out.println(removedNeighbor);
+			notifyDeleteNeighbor(WSNManager.ROOT_ID_HEX, removedNeighbor);
+			_motes.get(WSNManager.ROOT_ID_HEX).getNeighborTable().remove(removedNeighbor);
+		}
 	}
 
 }

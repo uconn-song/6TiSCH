@@ -1,7 +1,10 @@
 package gui;
 
+import java.awt.event.KeyEvent;
+import java.awt.event.KeyListener;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
+import java.util.HashMap;
 
 import network_model.NetworkModel;
 import network_model.WSNManager;
@@ -17,10 +20,14 @@ import gui_components.ContentPanel;
  * handles it accordingly. This panel also gets a reference to the network model to allow mouse clicks to modify the
  * network or retrieve data from the network.
  */
-public class GraphPanel extends ContentPanel implements MouseListener {
+public class GraphPanel extends ContentPanel implements MouseListener,KeyListener{
 	private NetworkGraph _graph;
 	private View _view; 
 	private NetworkModel _networkModel;
+	private boolean ctrlDown = false;
+	//private HashMap<String,GraphicElement> _selectedElements  = new HashMap<String,GraphicElement>();
+	private String[] _selectedElements = {"",""};
+	private int selectedCount = 0;
 	
 	public GraphPanel(NetworkGraph graph, NetworkModel networkModel){
 		super();
@@ -29,6 +36,7 @@ public class GraphPanel extends ContentPanel implements MouseListener {
 		_view.addMouseListener(this);
 		switchComponent(_view);
 		_networkModel = networkModel;
+		_view.addKeyListener(this);
 	}
 
 	
@@ -39,24 +47,53 @@ public class GraphPanel extends ContentPanel implements MouseListener {
 	@Override
 	public void mouseClicked(MouseEvent e) {
 		GraphicElement element  = _view.findNodeOrSpriteAt(e.getX(), e.getY());
+		
+		
 		if(!(element==null)){
 			
-		System.out.println(element.getId() + " " + element.getSelectorType());
-		if(element.getSelectorType().toString().equals("NODE"))
-		{
-			handleNodePress(element.getId(),e.getButton());
-		}else if(element.getSelectorType().toString().equals("EDGE")){
 			
-			handleEdgePress(element.getId(), e.getButton());
-		}
-		
+			
+			
+			
+			System.out.println(element.getId() + " " + element.getSelectorType());
+			if(element.getSelectorType().toString().equals("NODE"))
+			{
+				if(this.ctrlDown &&selectedCount <2){
+					_selectedElements[selectedCount] = element.getId();
+					selectedCount ++;
+					
+					if(selectedCount ==2){
+						//search for an edge
+						try{
+						System.out.println(_graph.getEdge(_selectedElements[0]+_selectedElements[1]).getAttribute("stability"));
+						}catch (NullPointerException ex){
+							//System.out.println("no edge found for " +_selectedElements[0]+_selectedElements[1] );
+						}
+						try{
+						System.out.println(_graph.getEdge(_selectedElements[1]+_selectedElements[0]).getAttribute("stability"));
+						}catch(NullPointerException ex){
+							//System.out.println("no edge found for " +_selectedElements[1]+_selectedElements[0] );
+						}
+					}
+				}else{
+					//if this is the only element selected
+					handleNodePress(element.getId(),e.getButton());
+				}
+			}
+			//edges cannot be pressed
+			
+		}else{
+			_selectedElements[0] = "";
+			_selectedElements[1] = "";
+			selectedCount = 0;
 		}
 		
 	}
 
-	private void handleEdgePress(String id, int button) {
+	private void handleEdgePress(String id, GraphicElement element, int button) {
 		// TODO Auto-generated method stub
-		System.out.println("Handle clicks in GraphPanel");
+		System.out.println("Handle edge clicks in GraphPanel");
+		System.out.println(element.getAttribute("stability"));
 		
 	}
 
@@ -88,6 +125,32 @@ public class GraphPanel extends ContentPanel implements MouseListener {
 
 	@Override
 	public void mouseReleased(MouseEvent arg0) {
+		// TODO Auto-generated method stub
+		
+	}
+
+
+
+	@Override
+	public void keyPressed(KeyEvent e) {
+		if(e.getKeyCode()== KeyEvent.VK_CONTROL){
+			ctrlDown=true;
+		}
+		
+	}
+
+	@Override
+	public void keyReleased(KeyEvent e) {
+		if(e.getKeyCode()== KeyEvent.VK_CONTROL){
+			ctrlDown=false;
+		}
+		
+	}
+
+
+
+	@Override
+	public void keyTyped(KeyEvent arg0) {
 		// TODO Auto-generated method stub
 		
 	}
