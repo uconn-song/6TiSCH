@@ -176,7 +176,7 @@ public class ControlPanel extends JPanel implements ConsoleCommandListener, Seri
 	public void acceptFrame(Frame collectedFrame) {
 		//Serial Frame level messages
 		if(collectedFrame.getType().equals("Status")){
-			//_outputTop.append(collectedFrame.toString()+ "\n");
+			_outputTop.append(collectedFrame.toString()+ "\n");
 			SFrame f = (SFrame)collectedFrame;
 			if(f._statusType.startsWith("9")){
 				

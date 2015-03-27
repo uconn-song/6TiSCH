@@ -265,13 +265,15 @@ public String getSrc64bAsHexString(){
 	}
 	return s;
 }
-/**
+/** printRaw()
  * Used in analyzing received packet, if true then this message was meant to be parsed by the manager.
  * @return
  */
 public boolean isDestinationRoot(){
 	for(int i = 0 ; i< 8;i++){
-		if((WSNManager.ROOT_ID[i]&0xFF)!=(destAddr64[i]&0xFF)) return false;
+		//if((WSNManager.ROOT_ID[i]&0xFF)!=(destAddr64[i]&0xFF)) return false;
+		//TEMPORARY SOLUTION destination all 2 
+		if((destAddr64[i]&0xFF)!=1) return false;
 	}
 	return true;
 }
