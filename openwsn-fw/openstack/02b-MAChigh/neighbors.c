@@ -258,7 +258,7 @@ bool neighbors_isPreferredParent(open_addr_t* address) {
 bool neighbors_isNeighborWithLowerDAGrank(uint8_t index) {
    bool    returnVal;
 
-   if (neighbors_vars.neighbors[index].used==TRUE && neighbors_vars.neighbors[i].connected==TRUE &&
+   if (neighbors_vars.neighbors[index].used==TRUE && neighbors_vars.neighbors[index].connected==TRUE &&
        neighbors_vars.neighbors[index].DAGrank < neighbors_getMyDAGrank()) {
       returnVal = TRUE;
    } else {
@@ -279,7 +279,7 @@ bool neighbors_isNeighborWithLowerDAGrank(uint8_t index) {
 bool neighbors_isNeighborWithHigherDAGrank(uint8_t index) {
    bool    returnVal;
 
-   if (neighbors_vars.neighbors[index].used==TRUE && neighbors_vars.neighbors[i].connected==TRUE &&
+   if (neighbors_vars.neighbors[index].used==TRUE && neighbors_vars.neighbors[index].connected==TRUE &&
        neighbors_vars.neighbors[index].DAGrank >= neighbors_getMyDAGrank()) {
       returnVal = TRUE;
    } else {

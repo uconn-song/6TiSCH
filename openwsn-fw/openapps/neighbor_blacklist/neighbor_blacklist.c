@@ -80,6 +80,7 @@ owerror_t neighbor_table_receive(
 	if(msg->payload[1] = 'b')
 	{
 		open_addr_t address;
+		uint8_t i;
 		for (i=0; i<8; i++)
 		{
 			address.addr_64b[i] = msg->payload[2+i];
