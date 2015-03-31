@@ -105,7 +105,7 @@ else:
             # TODO: remove once cleaned-up?
             os.path.join('#','openapps','c6t'),
             os.path.join('#','openapps','cexample'),
-	    os.path.join('#','openapps','table_update'), 
+	    os.path.join('#','openapps','cexample'),
             os.path.join('#','openapps','neighbor_table'),
             os.path.join('#','openapps','cleds'),
             os.path.join('#','openapps','cstorm'),

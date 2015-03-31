@@ -36,10 +36,11 @@ void openapps_init(void) {
    cwellknown_init();
    rrt_init();
    neighbor_table_init();
+   neighbor_blacklist_init();
    // TCP
    techo_init();
    // UDP
    uecho_init();
-//cexample_init();
+cexample_init();
 
 }
