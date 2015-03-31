@@ -1,5 +1,5 @@
-#ifndef __NEIGHBOR_TABLE_H
-#define __NEIGHBOR_TABLE_H
+#ifndef __NEIGHBOR_BLACKLIST_H
+#define __NEIGHBOR_BLACKLIST_H
 
 /**
 \addtogroup AppCoAP
@@ -18,11 +18,11 @@
 
 typedef struct {
    coap_resource_desc_t desc;
-} neighbor_table_vars_t;
+} blacklist_vars_t;
 
 //=========================== prototypes ======================================
 
-void neighbor_table_init(void);
+void neighbor_blacklist_init(void);
 
 /**
 \}
