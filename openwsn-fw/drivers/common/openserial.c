@@ -83,6 +83,24 @@ void openserial_init() {
                      isr_openserial_rx);
 }
 
+owerror_t openserial_printNeighborRemoved(uint8_t* address) {
+   uint8_t  i;
+   INTERRUPT_DECLARATION();
+   // retrieve ASN
+   
+   DISABLE_INTERRUPTS();
+   openserial_vars.outputBufFilled  = TRUE;
+   outputHdlcOpen();//start crc
+   //for each byte added to packet add crc
+   outputHdlcWrite('N');
+   for (i=0;i<8;i++){
+      outputHdlcWrite(address[i]);
+   }
+   outputHdlcClose();//finish computing crc
+   ENABLE_INTERRUPTS();
+   return E_SUCCESS;
+}
+
 owerror_t openserial_printStatus(uint8_t statusElement,uint8_t* buffer, uint8_t length) {
    uint8_t i;
    INTERRUPT_DECLARATION();

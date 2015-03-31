@@ -29,6 +29,7 @@
 #include "openrandom_obj.h"
 // applications
 #include "neighbor_table.h"
+#include "table_update.h"
 #include "c6t_obj.h"
 #include "cexample_obj.h"
 #include "cinfo_obj.h"
@@ -215,6 +216,7 @@ struct OpenMote {
    //===== openapps
    neighbor_table_vars_t         neighbor_table_vars;  
    c6t_vars_t           c6t_vars;
+   table_update_vars_t  table_update_vars;
    cexample_vars_t      cexample_vars;
    cinfo_vars_t         cinfo_vars;
    cleds_vars_t         cleds_vars;
