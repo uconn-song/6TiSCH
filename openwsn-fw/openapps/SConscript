@@ -15,12 +15,14 @@ defaultApps   = [
     'techo',
     'uecho',
     'rrt',
+'table_update',
     'neighbor_table',
-'cexample',
+#'cexample',
 ]
 if localEnv['board']=='python':
     defaultApps  += [
        # 'cexample',
+	
         'cstorm',
     ]
 

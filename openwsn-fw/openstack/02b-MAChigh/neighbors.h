@@ -40,7 +40,6 @@ typedef struct {
    uint8_t          numWraps;//number of times the tx counter wraps. can be removed if memory is a restriction. also check openvisualizer then.
    asn_t            asn;
    uint8_t          joinPrio;
-   bool             connected; // set by network manager to enforce network topology.
 } neighborRow_t;
 END_PACK
 
@@ -57,13 +56,14 @@ typedef struct {
    int8_t          rssi;
    uint8_t         parentPreference;
    dagrank_t       DAGrank;
-   uint16_t        asn;
+   uint16_t        asn; 
 } netDebugNeigborEntry_t;
 END_PACK
 
 //=========================== module variables ================================
-
+   
 typedef struct {
+//coap_resource_desc_t desc;
    neighborRow_t        neighbors[MAXNUMNEIGHBORS];
    dagrank_t            myDAGrank;
    uint8_t              debugRow;
@@ -88,8 +88,6 @@ bool          neighbors_isNeighborWithLowerDAGrank(uint8_t index);
 bool          neighbors_isNeighborWithHigherDAGrank(uint8_t index);
 
 // updating neighbor information
-void 		  neighbors_blacklist_toggle(open_addr_t* address);
-
 void          neighbors_indicateRx(
    open_addr_t*         l2_src,
    int8_t               rssi,
