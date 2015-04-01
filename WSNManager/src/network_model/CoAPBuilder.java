@@ -10,8 +10,10 @@ import stack.UDP_Datagram;
  */
 public class CoAPBuilder{
 	
-	public CoAPBuilder() {
-		
+	private NetworkModel _model;
+
+	public CoAPBuilder(NetworkModel model) {
+		_model = model;
 	}
 
 	//tk
@@ -21,6 +23,8 @@ public class CoAPBuilder{
 		//m.printRaw(m.getMessage());
 		UDP_Datagram d = new UDP_Datagram(m);
 		//d.printRaw(d.getMessage());
+		//source routing
+		
 		IPHC_Data hc = new IPHC_Data(d);
 		//hc.printRaw(hc.getMessage());
 		

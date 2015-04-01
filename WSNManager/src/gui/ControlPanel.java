@@ -146,7 +146,7 @@ public class ControlPanel extends JPanel implements ConsoleCommandListener, Seri
 		String resource = iidResourcePair[1].split(" ")[0];
 		String method = iidResourcePair[1].split(" ")[1];
 		
-    	_connectionManager.send(new CoAPBuilder().getSerialPacket(method, resource, iid, null));
+    	_connectionManager.send(new CoAPBuilder(_connectionManager.getNetworkModel()).getSerialPacket(method, resource, iid, null));
 	}
 
 

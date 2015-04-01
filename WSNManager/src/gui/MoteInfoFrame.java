@@ -24,6 +24,5 @@ public class MoteInfoFrame extends JFrame{
 		pack();
 		area.append(mote.getID64() +"\n");
 		area.append(mote.getNeighborTable().toString());
-		area.append("hello");
 	}
 }

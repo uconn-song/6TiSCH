@@ -33,7 +33,7 @@ public class WSNManager{
 	private ControlPanel _controlPanel;
 	private GUIManager _guiManager;
 	private  NetworkModel _networkModel = new NetworkModel();
-	public static byte[] NETWORK_PREFIX = new byte[]{0,0,0,0,0,0,0,0};
+	public static byte[] NETWORK_PREFIX = new byte[]{1,1,1,1,1,1,1,1};
 	public static  byte[] ROOT_ID = new byte[8];
 	public static String ROOT_ID_HEX="";
 	public WSNManager() throws SerialPortException
@@ -41,7 +41,7 @@ public class WSNManager{
 		_controlPanel = new ControlPanel(this);
 		_guiManager = new GUIManager(_controlPanel,_networkModel);	
 		_networkModel.addObserver(_guiManager.getGraph());
-		_guiManager.switchPanel2("graph");
+		
 	}
   
 	

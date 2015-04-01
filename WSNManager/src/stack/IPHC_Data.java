@@ -273,7 +273,7 @@ public boolean isDestinationRoot(){
 	for(int i = 0 ; i< 8;i++){
 		//if((WSNManager.ROOT_ID[i]&0xFF)!=(destAddr64[i]&0xFF)) return false;
 		//TEMPORARY SOLUTION destination all 2 
-		if((destAddr64[i]&0xFF)!=1) return false;
+		if((destPrefix64[i]&0xFF)!=1) return false;
 	}
 	return true;
 }
