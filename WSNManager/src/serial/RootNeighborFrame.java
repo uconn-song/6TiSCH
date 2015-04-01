@@ -18,7 +18,6 @@ public class RootNeighborFrame extends Frame {
 		for (int i =0;i<8;i++){
 			address = address + Integer.toHexString(data.get(i+1)&0xFF);
 		}
-		System.out.println("implement root neighbor frame " + address);
 	}
 	
 	public String getRemovedNeighborID(){

@@ -56,11 +56,28 @@ public class GUIManager extends JFrame{
 		//need to add reference to the manager so it can respond to clicks
 		initializeGraph(_networkModel);
 		pack();
-		setVisible(true);
+		//setVisible(true);
 		setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
 		_panels.put("control panel", _controlPanel);
-		switchPanel1("control panel");
-		switchPanel2("graph");
+		
+		
+		JFrame f = new JFrame();
+		f.getContentPane().add(_controlPanel);
+		f.pack();
+		f.setVisible(true);
+		f.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
+		
+		
+		JFrame f2 = new JFrame();
+		f2.getContentPane().add(_graphPanel);
+		f2.pack();
+		f2.setVisible(true);
+		f2.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
+		
+		//new JFrame().add(_controlPanel).setVisible(true);
+		//new JFrame().add(_graphPanel).setVisible(true);
+		//switchPanel1("control panel");
+		//switchPanel2("graph");
 		
 	}
 

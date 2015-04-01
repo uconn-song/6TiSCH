@@ -63,6 +63,10 @@ public class NetworkModel implements SerialListener {
 			
 	}
 
+	
+	public Mote getRootMote(){
+		return _motes.get(_rootid64Hex);
+	}
 	/**
 	 * method to create a new mote
 	 */
