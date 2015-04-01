@@ -157,7 +157,8 @@ enum {
    COMPONENT_TOHLONE                   = 0x21,
    COMPONENT_UECHO                     = 0x22,
    COMPONENT_RRT                       = 0x23,
-   COMPONENT_NEIGHBOR_TABLE                       = 0x24,
+   COMPONENT_NEIGHBOR_TABLE            = 0x24,
+   COMPONENT_NEIGHBOR_BLACKLIST        = 0x25
 };
 
 /**

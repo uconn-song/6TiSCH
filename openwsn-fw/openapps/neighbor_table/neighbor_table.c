@@ -96,7 +96,7 @@ owerror_t neighbor_table_receive(
    debugNeighborEntry_t* entry =  neighbors_table_entry();
    //set payload
    msg->payload[0] = COAP_PAYLOAD_MARKER;
-msg->payload[1] = 'n';
+   msg->payload[1] = 'n';
    int index = 2;
    //row
    msg->payload[index++] = entry->row;//0
@@ -115,28 +115,25 @@ msg->payload[1] = 'n';
    switch(entry->neighborEntry.addr_64b.type){
     case 1  :
         msg->payload[index] = entry->neighborEntry.addr_64b.addr_16b; // 6 
-	index = index+2;
-       break;
+		index = index+2;
+		break;
     case 2  :
-
-	memcpy(msg->payload[index],(entry->neighborEntry.addr_64b.addr_64b),8);
-
-	//msg->payload[index+i] = (uint8_t) (entry->neighborEntry.addr_64b.addr_64b)[i]; // 6
-
-	index = index+8;
-      break;
+		memcpy(msg->payload[index],(entry->neighborEntry.addr_64b.addr_64b),8);
+		//msg->payload[index+i] = (uint8_t) (entry->neighborEntry.addr_64b.addr_64b)[i]; // 6
+		index = index+8;
+		break;
     case 3  :
         msg->payload[index] = entry->neighborEntry.addr_64b.addr_128b; // 6 
-	index = index+16;
-       break;
+		index = index+16;
+		break;
     case 4  :
-	msg->payload[index] = entry->neighborEntry.addr_64b.panid;
+		msg->payload[index] = entry->neighborEntry.addr_64b.panid;
         index = index+2;
-       break;
+        break;
     case 5 :
-	msg->payload[index] = entry->neighborEntry.addr_64b.prefix;
-	index = index+8;
-       break;
+		msg->payload[index] = entry->neighborEntry.addr_64b.prefix;
+		index = index+8;
+        break;
    }
    //dagrank
    msg->payload[index++] = entry->neighborEntry.DAGrank;
