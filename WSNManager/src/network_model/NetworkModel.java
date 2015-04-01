@@ -150,15 +150,22 @@ public class NetworkModel implements SerialListener {
 					if(e.used==1){
 						addNeighbor(sourceMote,e.getiid64Hex(),e);
 					}
-				}else if (flag==100){ //'d'
-					System.out.println("TODO: NetworkModule implement delete");
-					//neighbor table delete message
+				}else if (flag=='r'){ //'r'
+					
+					NeighborEntry e = new NeighborEntry(coapPayload);
+					String removedMote = e.getiid64Hex();
+					System.out.println("delete " +  removedMote);
+					//remove edges in both directions
+					notifyDeleteNeighbor(sourceMote, removedMote );
+					notifyDeleteNeighbor(removedMote, sourceMote );
 				}
 			}
 		}else if(collectedFrame.getType().equals("RootNeighbor")){
 			String removedNeighbor = ((RootNeighborFrame)collectedFrame).getRemovedNeighborID();
 			System.out.println(removedNeighbor);
+			//remove edges in both directions
 			notifyDeleteNeighbor(WSNManager.ROOT_ID_HEX, removedNeighbor);
+			notifyDeleteNeighbor(removedNeighbor,WSNManager.ROOT_ID_HEX);
 			_motes.get(WSNManager.ROOT_ID_HEX).getNeighborTable().remove(removedNeighbor);
 		}
 	}

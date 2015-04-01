@@ -112,7 +112,7 @@ public class NeighborEntry
     * @param _data
     */
  public NeighborEntry(byte[] _data){
-    	
+    	System.out.println("parsing neighbor entry");
     	row=_data[1]; //1
         used=_data[2]; //2
         
