@@ -35,6 +35,8 @@ static const uint8_t infoStackName[] = "OpenWSN ";
 #define LENGTH_ADDR64b  8
 #define LENGTH_ADDR128b 16
 
+//hardcoded root address, all 1s
+static const uint8_t manager_address[]    = {0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01};
 
 enum {
    E_SUCCESS                           = 0,
@@ -158,7 +160,8 @@ enum {
    COMPONENT_UECHO                     = 0x22,
    COMPONENT_RRT                       = 0x23,
    COMPONENT_NEIGHBOR_TABLE            = 0x24,
-   COMPONENT_NEIGHBOR_BLACKLIST        = 0x25
+   COMPONENT_TABLE_UPDATE              = 0x25,
+	COMPONENT_NEIGHBOR_BLACKLIST        = 0x26,
 };
 
 /**

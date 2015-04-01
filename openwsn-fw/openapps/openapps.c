@@ -41,6 +41,6 @@ void openapps_init(void) {
    techo_init();
    // UDP
    uecho_init();
-cexample_init();
+
 
 }

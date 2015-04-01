@@ -20,7 +20,8 @@
 
 const uint8_t neighbor_table_path0[] = "n";
 #define PAYLOADLEN      46
-
+#define SENDPERIOD  500
+int rowIndex = 0;
 
 //=========================== variables =======================================
 
@@ -33,6 +34,8 @@ owerror_t     neighbor_table_receive(
    coap_header_iht*  coap_header,
    coap_option_iht*  coap_options
 );
+void    app_timer_cb(opentimer_id_t id);
+void send_next_row(void);
 void          neighbor_table_sendDone(
    OpenQueueEntry_t* msg,
    owerror_t error
@@ -47,7 +50,7 @@ void neighbor_table_init() {
    // do not run if DAGroot
    if(idmanager_getIsDAGroot()==TRUE) return; 
    
-   // prepare the resource descriptor for the /i path
+   // prepare the resource descriptor for the /n path
    neighbor_table_vars.desc.path0len             = sizeof(neighbor_table_path0)-1;
    neighbor_table_vars.desc.path0val             = (uint8_t*)(&neighbor_table_path0);
    neighbor_table_vars.desc.path1len             = 0;
@@ -83,92 +86,171 @@ owerror_t neighbor_table_receive(
    switch (coap_header->Code) {
       case COAP_CODE_REQ_GET:
          
-         //=== reset packet payload (we will reuse this packetBuffer)
-         msg->payload                     = &(msg->packet[127]);
-         msg->length                      = 0;
-         
-         //=== prepare  CoAP response
-         
-  
-         packetfunctions_reserveHeaderSize(msg,PAYLOADLEN);
+   //=== reset packet payload (we will reuse this packetBuffer)
+   msg->payload                     = &(msg->packet[127]);
+   msg->length                      = 0;
+   //=== prepare  CoAP response
+
+   packetfunctions_reserveHeaderSize(msg,PAYLOADLEN);
 
    //construct packet
    debugNeighborEntry_t* entry =  neighbors_table_entry();
    //set payload
-   msg->payload[0] = COAP_PAYLOAD_MARKER;
-   msg->payload[1] = 'n';
+   msg->payload[0] = COAP_PAYLOAD_MARKER;//1
+   msg->payload[1] = 'n';//2
    int index = 2;
    //row
-   msg->payload[index++] = entry->row;//0
+   msg->payload[index++] = entry->row;//3
    //used
-   msg->payload[index++] = entry->neighborEntry.used;	//1
+   msg->payload[index++] = entry->neighborEntry.used;	//4
    //parentRef
-   msg->payload[index++] = entry->neighborEntry.parentPreference;//2
+   msg->payload[index++] = entry->neighborEntry.parentPreference;//5
    //stableNeighbor
-   msg->payload[index++] = entry->neighborEntry.stableNeighbor;//3
+   msg->payload[index++] = entry->neighborEntry.stableNeighbor;//6
    //switchStability
-   msg->payload[index++] = entry->neighborEntry.switchStabilityCounter; //4
+   msg->payload[index++] = entry->neighborEntry.switchStabilityCounter; //7
    //address type
-   msg->payload[index++] = entry->neighborEntry.addr_64b.type;//5
-   // the address itself
-
-   switch(entry->neighborEntry.addr_64b.type){
-    case 1  :
-        msg->payload[index] = entry->neighborEntry.addr_64b.addr_16b; // 6 
-		index = index+2;
-		break;
-    case 2  :
-		memcpy(msg->payload[index],(entry->neighborEntry.addr_64b.addr_64b),8);
-		//msg->payload[index+i] = (uint8_t) (entry->neighborEntry.addr_64b.addr_64b)[i]; // 6
-		index = index+8;
-		break;
-    case 3  :
-        msg->payload[index] = entry->neighborEntry.addr_64b.addr_128b; // 6 
-		index = index+16;
-		break;
-    case 4  :
-		msg->payload[index] = entry->neighborEntry.addr_64b.panid;
-        index = index+2;
-        break;
-    case 5 :
-		msg->payload[index] = entry->neighborEntry.addr_64b.prefix;
-		index = index+8;
-        break;
-   }
+   msg->payload[index++] = entry->neighborEntry.addr_64b.type;//8
+    // the address itself
+	open_addr_t addr =entry->neighborEntry.addr_64b;//16
+	memcpy(&msg->payload[index],&addr.addr_64b,8);
+	index = index+8;
    //dagrank
-   msg->payload[index++] = entry->neighborEntry.DAGrank;
+   msg->payload[index++] = entry->neighborEntry.DAGrank;//17
    //rssi
-   msg->payload[index] = entry->neighborEntry.rssi;
+   msg->payload[index] = entry->neighborEntry.rssi;//19
    index = index+2;
    //numRx
-   msg->payload[index++] = entry->neighborEntry.numRx;
+   msg->payload[index++] = entry->neighborEntry.numRx;//20
    //numTx
-   msg->payload[index++] = entry->neighborEntry.numTx;
+   msg->payload[index++] = entry->neighborEntry.numTx;//21
    //numTxACK
-   msg->payload[index++] = entry->neighborEntry.numTxACK;
+   msg->payload[index++] = entry->neighborEntry.numTxACK;//22
    //numWraps
-   msg->payload[index++] = entry->neighborEntry.numWraps;
+   msg->payload[index++] = entry->neighborEntry.numWraps;//23
    //asn
-   msg->payload[index++] = entry->neighborEntry.asn.byte4;
-   msg->payload[index] = entry->neighborEntry.asn.bytes2and3;
+   msg->payload[index++] = entry->neighborEntry.asn.byte4;//24
+   msg->payload[index] = entry->neighborEntry.asn.bytes2and3;//26
    index = index+2;
-   msg->payload[index] = entry->neighborEntry.asn.bytes0and1;
+   msg->payload[index] = entry->neighborEntry.asn.bytes0and1;//28
    index = index+2;
    //joinPrio
-   msg->payload[index] = entry->neighborEntry.joinPrio;
+   msg->payload[index] = entry->neighborEntry.joinPrio;//29
 
    free(entry);
-         // set the CoAP header
-         coap_header->Code                = COAP_CODE_RESP_CONTENT;
-         
-         outcome                          = E_SUCCESS;
+   // set the CoAP header
+   coap_header->Code                = COAP_CODE_RESP_CONTENT;
+   outcome                          = E_SUCCESS;
+
+	// start timer to send the rest of the neigbor table
+	neighbor_table_vars.timerId = opentimers_start(SENDPERIOD,TIMER_PERIODIC,TIME_MS,
+                                                app_timer_cb);
          break;
       default:
          // return an error message
          outcome = E_FAIL;
-   }
-   
+	}
+
    return outcome;
+}
+
+void app_timer_cb(opentimer_id_t id){
+   scheduler_push_task(send_next_row,TASKPRIO_COAP);
+}
+
+void send_next_row() {
+   OpenQueueEntry_t*    packet;
+   owerror_t            outcome;
+   uint8_t              i;
+
+	//send the remaining 9 rows and reset the index counter
+   if (rowIndex == 9) {
+      opentimers_stop(neighbor_table_vars.timerId);
+      rowIndex =0;
+      return;
+   }
+   rowIndex++;
+   // create a CoAP RD packet
+   packet = openqueue_getFreePacketBuffer(COMPONENT_NEIGHBOR_TABLE);
+   if (packet==NULL) {
+      openserial_printError(
+         COMPONENT_NEIGHBOR_TABLE,
+         ERR_NO_FREE_PACKET_BUFFER,
+         (errorparameter_t)0,
+         (errorparameter_t)0
+      );
+      openqueue_freePacketBuffer(packet);
+      return;
+   }
+   // take ownership over that packet
+   packet->creator                   = COMPONENT_NEIGHBOR_TABLE;
+   packet->owner                     = COMPONENT_NEIGHBOR_TABLE;
+   // CoAP payload
+   packetfunctions_reserveHeaderSize(packet,PAYLOADLEN);
+
+   //construct packet
+   debugNeighborEntry_t* entry =  neighbors_table_entry();
+   int index = 2;
+   packet->payload[0] = COAP_PAYLOAD_MARKER;
+	packet->payload[1] = 'n';
+   //row
+   packet->payload[index++] = entry->row;//0
+   //used
+   packet->payload[index++] = entry->neighborEntry.used;	//1
+   //parentRef
+   packet->payload[index++] = entry->neighborEntry.parentPreference;//2
+   //stableNeighbor
+   packet->payload[index++] = entry->neighborEntry.stableNeighbor;//3
+   //switchStability
+   packet->payload[index++] = entry->neighborEntry.switchStabilityCounter; //4
+   //address type
+   packet->payload[index++] = entry->neighborEntry.addr_64b.type;//5
+   // the address itself
+	open_addr_t addr =entry->neighborEntry.addr_64b;
+	memcpy(&packet->payload[index],&addr.addr_64b,8);
+	index = index+8;
+   //dagrank
+   packet->payload[index++] = entry->neighborEntry.DAGrank;
+   //rssi
+   packet->payload[index] = entry->neighborEntry.rssi;
+   index = index+2;
+   //numRx
+   packet->payload[index++] = entry->neighborEntry.numRx;
+   //numTx
+   packet->payload[index++] = entry->neighborEntry.numTx;
+   //numTxACK
+   packet->payload[index++] = entry->neighborEntry.numTxACK;
+   //numWraps
+   packet->payload[index++] = entry->neighborEntry.numWraps;
+   //asn
+   packet->payload[index++] = entry->neighborEntry.asn.byte4;
+   packet->payload[index] = entry->neighborEntry.asn.bytes2and3;
+   index = index+2;
+   packet->payload[index] = entry->neighborEntry.asn.bytes0and1;
+   index = index+2;
+   //joinPrio
+   packet->payload[index] = entry->neighborEntry.joinPrio;
+   free(entry);
+   // metadata
+   packet->l4_destination_port       = WKP_UDP_COAP;
+   packet->l3_destinationAdd.type    = ADDR_128B;
+   memcpy(&packet->l3_destinationAdd.addr_128b[0],(*get_icmpv6rpl_vars()).dio.DODAGID,16);
+   
+   // send
+   outcome = opencoap_send(
+      packet,
+      COAP_TYPE_NON,
+      COAP_CODE_RESP_CONTENT,
+      1,
+      &neighbor_table_vars.desc
+   );
+   
+   // avoid overflowing the queue if fails
+   if (outcome==E_FAIL) {
+      openqueue_freePacketBuffer(packet);
+   }
+
+   return;
 }
 
 /**

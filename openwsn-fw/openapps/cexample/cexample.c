@@ -2,7 +2,6 @@
 \brief An example CoAP application.
 */
 
-#include "icmpv6rpl.h"
 #include "opendefs.h"
 #include "cexample.h"
 #include "opencoap.h"
@@ -108,9 +107,9 @@ void cexample_task_cb() {
 
    //construct packet
    debugNeighborEntry_t* entry =  neighbors_table_entry();
-   pkt->payload[0] = COAP_PAYLOAD_MARKER;
-   pkt->payload[1] = 'n';
-   int index = 2;
+   int index = 0;
+   pkt->payload[index++] = 255;
+   pkt->payload[index++] = 'n';
    //row
    pkt->payload[index++] = entry->row;//0
    //used
@@ -124,32 +123,32 @@ void cexample_task_cb() {
    //address type
    pkt->payload[index++] = entry->neighborEntry.addr_64b.type;//5
    // the address itself
-	memcpy(pkt->payload[index],(entry->neighborEntry.addr_64b.addr_64b),8);
-index=index+8;
-/*
-   switch(entry->neighborEntry.addr_64b.type){
-    case 0  :
+
+  /* switch(entry->neighborEntry.addr_64b.type){
+    case 1  :
         pkt->payload[index] = entry->neighborEntry.addr_64b.addr_16b; // 6 
 	index = index+2;
        break;
-    case 1  :
-	pkt->payload[index] = entry->neighborEntry.addr_64b.addr_64b; // 6
+    case 2  :*/
+
+	open_addr_t addr =entry->neighborEntry.addr_64b;
+	memcpy(&pkt->payload[index],&addr.addr_64b,8);
+	//pkt->payload[index] = addr_64b; // 6
 	index = index+8;
-       break;
-    case 2  :
+    /*   break;
+    case 3  :
         pkt->payload[index] = entry->neighborEntry.addr_64b.addr_128b; // 6 
 	index = index+16;
        break;
-    case 3  :
+    case 4  :
 	pkt->payload[index] = entry->neighborEntry.addr_64b.panid;
         index = index+2;
        break;
-    case 4 :
+    case 5 :
 	pkt->payload[index] = entry->neighborEntry.addr_64b.prefix;
 	index = index+8;
        break;
-   }
-*/
+   }*/
    //dagrank
    pkt->payload[index++] = entry->neighborEntry.DAGrank;
    //rssi
@@ -172,20 +171,15 @@ index=index+8;
    //joinPrio
    pkt->payload[index] = entry->neighborEntry.joinPrio;
    free(entry);
-/*
-uint8_t         dodagid[16];
-   
-   // retrieve my prefix and EUI64
-   memcpy(&dodagid[0],idmanager_getMyID(ADDR_PREFIX)->prefix,8); // prefix
-   memcpy(&dodagid[8],idmanager_getMyID(ADDR_64B)->addr_64b,8);  // eui64
-*/
-
-
    // metadata
    pkt->l4_destination_port       = WKP_UDP_COAP;
    pkt->l3_destinationAdd.type    = ADDR_128B;
-   memcpy(&pkt->l3_destinationAdd.addr_128b[0],(*get_icmpv6rpl_vars()).dio.DODAGID,16);
-// memcpy(&pkt->l3_destinationAdd.addr_64b[0],(uint8_t*)&dodagid[8],8);
+   char addr128[] ={0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,
+		    0x14,0x15,0x92,0x00,0x00,0x16,0xc0,0x76};
+//why does this work????????????????????//
+   uint8_t*  DODAGID = get_icmpv6rpl_vars()->dio.DODAGID;
+// memcpy(&pkt->l3_destinationAdd.addr_128b[0],&addr128,sizeof(addr128));
+   memcpy(&pkt->l3_destinationAdd.addr_128b[0],DODAGID,sizeof(addr128));
    
    // send
    outcome = opencoap_send(

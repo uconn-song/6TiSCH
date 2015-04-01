@@ -147,6 +147,7 @@ void tcpinject_trigger(void)      { return; }
 
 void tcpprint_init(void)          { return; }
 void neighbor_table_init(void)    { return; }
+void table_update_init()    { return; } //open_addr_t address, char act
 void c6t_init(void)               { return; }
 void cinfo_init(void)             { return; }
 void cleds__init(void)            { return; }
