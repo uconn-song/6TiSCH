@@ -154,7 +154,7 @@ public class NetworkModel implements SerialListener {
 					
 					NeighborEntry e = new NeighborEntry(coapPayload);
 					String removedMote = e.getiid64Hex();
-					System.out.println("delete " +  removedMote);
+					//System.out.println("delete " +  removedMote);
 					//remove edges in both directions
 					notifyDeleteNeighbor(sourceMote, removedMote );
 					notifyDeleteNeighbor(removedMote, sourceMote );
@@ -162,7 +162,7 @@ public class NetworkModel implements SerialListener {
 			}
 		}else if(collectedFrame.getType().equals("RootNeighbor")){
 			String removedNeighbor = ((RootNeighborFrame)collectedFrame).getRemovedNeighborID();
-			System.out.println(removedNeighbor);
+			//System.out.println(removedNeighbor);
 			//remove edges in both directions
 			notifyDeleteNeighbor(WSNManager.ROOT_ID_HEX, removedNeighbor);
 			notifyDeleteNeighbor(removedNeighbor,WSNManager.ROOT_ID_HEX);
