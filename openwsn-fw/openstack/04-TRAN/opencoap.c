@@ -97,6 +97,9 @@ void opencoap_receive(OpenQueueEntry_t* msg) {
       
       // detect when done parsing options
       if (msg->payload[index]==COAP_PAYLOAD_MARKER) {
+       //*****************
+       msg->l4_payload = &(msg->payload[index]);
+       //*****************
          // found the payload marker, done parsing options.
          index++; // skip marker and stop parsing options
          break;
