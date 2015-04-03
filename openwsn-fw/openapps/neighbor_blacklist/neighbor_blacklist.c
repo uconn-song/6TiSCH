@@ -27,12 +27,12 @@ blacklist_vars_t blacklist_vars;
 
 //=========================== prototypes ======================================
 
-owerror_t     neighbor_blacklist_receive(
+owerror_t     neighbor_table_receive(
    OpenQueueEntry_t* msg,
    coap_header_iht*  coap_header,
    coap_option_iht*  coap_options
 );
-void          neighbor_blacklist_sendDone(
+void          neighbor_table_sendDone(
    OpenQueueEntry_t* msg,
    owerror_t error
 );
@@ -69,22 +69,26 @@ void neighbor_blacklist_init() {
 
 \return Whether the response is prepared successfully.
 */
-owerror_t neighbor_blacklist_receive(
+owerror_t neighbor_table_receive(
       OpenQueueEntry_t* msg,
       coap_header_iht* coap_header,
       coap_option_iht* coap_options
    ) {
    
-	owerror_t outcome= E_SUCCESS;
+	owerror_t outcome;
 	
-	open_addr_t address;
-	uint8_t i;
-	for (i=0; i<8; i++)
+	if(msg->payload[1] = 'b')
 	{
-		address.addr_64b[i] = msg->l4_payload[1+i];
-	}
-	neighbors_blacklist_toggle(&address);
-	
+		open_addr_t address;
+		uint8_t i;
+		for (i=0; i<8; i++)
+		{
+			address.addr_64b[i] = msg->payload[2+i];
+		}
+		neighbors_blacklist_toggle(&address);
+			 
+	}  
+   
    return outcome;
 }
 
@@ -94,6 +98,6 @@ owerror_t neighbor_blacklist_receive(
 \param[in] msg The CoAP message just sent.
 \param[in] error The outcome of sending it.
 */
-void neighbor_blacklist_sendDone(OpenQueueEntry_t* msg, owerror_t error) {
+void neighbor_table_sendDone(OpenQueueEntry_t* msg, owerror_t error) {
    openqueue_freePacketBuffer(msg);
 }
