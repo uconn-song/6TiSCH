@@ -11,6 +11,12 @@ import org.graphstream.ui.swingViewer.View;
 import org.graphstream.ui.swingViewer.Viewer;
 import org.graphstream.ui.swingViewer.util.DefaultCamera;
 
+
+
+/**
+ * Handles the modification of GraphStream components, adding and deleting edges, nodes, and modifying their colors
+ *
+ */
 public class NetworkGraph extends MultiGraph implements NetworkObserver {
 	
 		View view;
@@ -81,6 +87,7 @@ public class NetworkGraph extends MultiGraph implements NetworkObserver {
 	public void addEdge(String moteIIDbase, String moteIIDneighbor){
 		try{
 			addEdge(moteIIDbase+moteIIDneighbor, moteIIDbase,moteIIDneighbor,true).addAttribute("stability", "stable"); 
+			this.getEdge(moteIIDbase+moteIIDneighbor).addAttribute("ui.style", "fill-color:green;");
 			//viewer = new Viewer(this, Viewer.ThreadingModel.GRAPH_IN_ANOTHER_THREAD);
 			//viewer.enableAutoLayout();
 			 //view = viewer.addDefaultView(false);

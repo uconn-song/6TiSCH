@@ -19,6 +19,7 @@ public class CoAPBuilder{
 
 	//tk
 	public byte[] getSerialPacket(String method, String URIPath, String dest64, byte[] payload){
+		
 		CoapMessage m = new CoapMessage(method,URIPath, dest64,payload);
 		
 		//m.printRaw(m.getMessage());
@@ -27,8 +28,7 @@ public class CoAPBuilder{
 		//d.printRaw(d.getMessage());
 		//check if source routing is necessary
 		boolean directNeighbor = _model.getRootMote().getNeighborTable().containsKey(dest64);
-		System.out.println(dest64);
-		System.out.println(_model.getRootMote().getID64());
+		
 		if(!directNeighbor){
 			//TODO: implement source routing header
 			int prefixBytesElided = 10;

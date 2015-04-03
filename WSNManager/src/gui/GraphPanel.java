@@ -6,6 +6,7 @@ import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.util.HashMap;
 
+import network_model.CoAPBuilder;
 import network_model.NetworkModel;
 import network_model.WSNManager;
 
@@ -15,7 +16,7 @@ import org.graphstream.ui.swingViewer.View;
 
 import graphStream.NetworkGraph;
 import gui_components.ContentPanel;
-/**
+/** Main function: Handle mouse interactions
  * JPanel implementation which holds the GraphStream graph. This panel listens for mouse input on the graph and 
  * handles it accordingly. This panel also gets a reference to the network model to allow mouse clicks to modify the
  * network or retrieve data from the network.
@@ -28,8 +29,8 @@ public class GraphPanel extends ContentPanel implements MouseListener,KeyListene
 	//private HashMap<String,GraphicElement> _selectedElements  = new HashMap<String,GraphicElement>();
 	private String[] _selectedElements = {"",""};
 	private int selectedCount = 0;
-	
-	public GraphPanel(NetworkGraph graph, NetworkModel networkModel){
+	private WSNManager _manager;
+	public GraphPanel(NetworkGraph graph, NetworkModel networkModel, WSNManager manager){
 		super();
 		_graph = graph;
 		_view = _graph.getView();
@@ -37,6 +38,7 @@ public class GraphPanel extends ContentPanel implements MouseListener,KeyListene
 		switchComponent(_view);
 		_networkModel = networkModel;
 		_view.addKeyListener(this);
+		_manager =manager;
 	}
 
 	
@@ -103,9 +105,9 @@ public class GraphPanel extends ContentPanel implements MouseListener,KeyListene
 	}
 
 	private void handleNodePress(String id, int button) {
-		// TODO Auto-generated method stub
-		System.out.println("Handle clicks in GraphPanel");
-		MoteInfoFrame f = new MoteInfoFrame(id, _networkModel.getMote(id));
+		_manager.send(new CoAPBuilder(_networkModel).getSerialPacket("GET", "n", id, new byte[]{(byte)0xFF,1}));
+		
+		MoteInfoFrame f = new MoteInfoFrame(id, _networkModel.getMote(id), _networkModel, _manager);
 		f.setVisible(true);
 		
 	}

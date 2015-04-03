@@ -12,6 +12,7 @@ import javax.swing.JComponent;
 import javax.swing.JFrame;
 import javax.swing.WindowConstants;
 import network_model.NetworkModel;
+import network_model.WSNManager;
 
 
 public class GUIManager extends JFrame{
@@ -22,9 +23,11 @@ public class GUIManager extends JFrame{
 	private HashMap<String,JComponent> _panels = new HashMap<String,JComponent>();
 	private NetworkGraph _graph;
 	private ContentPanel _graphPanel;
+	private WSNManager _wsnManager;
 
 	
-	public GUIManager(ControlPanel p, NetworkModel _networkModel) {
+	public GUIManager(ControlPanel p, NetworkModel _networkModel, WSNManager manager) {
+		_wsnManager = manager;
 		_controlPanel = p;
 		setLayout(new GridBagLayout());
 		GridBagConstraints c = new GridBagConstraints();
@@ -86,7 +89,7 @@ public class GUIManager extends JFrame{
 	private void initializeGraph(NetworkModel _networkModel) {
 		_graph = new NetworkGraph("embedded");
 		
-		_graphPanel = new GraphPanel(_graph,_networkModel);
+		_graphPanel = new GraphPanel(_graph,_networkModel, _wsnManager);
 	/*	Layout layout = new SpringBox(false);
 		    _graph.addSink(layout);
 		    layout.addAttributeSink(_graph);

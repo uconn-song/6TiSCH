@@ -39,7 +39,7 @@ public class WSNManager{
 	public WSNManager() throws SerialPortException
 	{
 		_controlPanel = new ControlPanel(this);
-		_guiManager = new GUIManager(_controlPanel,_networkModel);	
+		_guiManager = new GUIManager(_controlPanel,_networkModel,this);	
 		_networkModel.addObserver(_guiManager.getGraph());
 		
 	}
