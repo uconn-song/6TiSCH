@@ -113,7 +113,9 @@ void          neighbors_updateMyDAGrankAndNeighborPreference(void);
 void          neighbors_removeOld(void);
 // debug
 bool          debugPrint_neighbors(void);
-debugNeighborEntry_t* neighbors_table_entry(void);
+debugNeighborEntry_t* neighbors_table_entry(int);
+void send_first_row(OpenQueueEntry_t* msg);
+
 /**
 \}
 \}

@@ -20,7 +20,7 @@
 
 const uint8_t neighbor_table_path0[] = "n";
 #define PAYLOADLEN      46
-#define SENDPERIOD  500
+#define SENDPERIOD  1000
 int rowIndex = 0;
 
 //=========================== variables =======================================
@@ -85,16 +85,16 @@ owerror_t neighbor_table_receive(
    
    switch (coap_header->Code) {
       case COAP_CODE_REQ_GET:
-         
+    /*     
    //=== reset packet payload (we will reuse this packetBuffer)
    msg->payload                     = &(msg->packet[127]);
    msg->length                      = 0;
    //=== prepare  CoAP response
-
+   
    packetfunctions_reserveHeaderSize(msg,PAYLOADLEN);
 
    //construct packet
-   debugNeighborEntry_t* entry =  neighbors_table_entry();
+   debugNeighborEntry_t* entry =  neighbors_table_entry(0);
    //set payload
    msg->payload[0] = COAP_PAYLOAD_MARKER;//1
    msg->payload[1] = 'n';//2
@@ -139,10 +139,13 @@ owerror_t neighbor_table_receive(
 
    free(entry);
    // set the CoAP header
+
    coap_header->Code                = COAP_CODE_RESP_CONTENT;
+*/
    outcome                          = E_SUCCESS;
 
 	// start timer to send the rest of the neigbor table
+
 	neighbor_table_vars.timerId = opentimers_start(SENDPERIOD,TIMER_PERIODIC,TIME_MS,
                                                 app_timer_cb);
          break;
@@ -164,12 +167,12 @@ void send_next_row() {
    uint8_t              i;
 
 	//send the remaining 9 rows and reset the index counter
-   if (rowIndex == 9) {
+   if (rowIndex == 10) {
       opentimers_stop(neighbor_table_vars.timerId);
       rowIndex =0;
       return;
    }
-   rowIndex++;
+   
    // create a CoAP RD packet
    packet = openqueue_getFreePacketBuffer(COMPONENT_NEIGHBOR_TABLE);
    if (packet==NULL) {
@@ -189,7 +192,9 @@ void send_next_row() {
    packetfunctions_reserveHeaderSize(packet,PAYLOADLEN);
 
    //construct packet
-   debugNeighborEntry_t* entry =  neighbors_table_entry();
+   debugNeighborEntry_t* entry =  neighbors_table_entry(rowIndex);
+	//increment the index for the next func call
+	rowIndex++;
    int index = 2;
    packet->payload[0] = COAP_PAYLOAD_MARKER;
 	packet->payload[1] = 'n';
@@ -234,8 +239,13 @@ void send_next_row() {
    // metadata
    packet->l4_destination_port       = WKP_UDP_COAP;
    packet->l3_destinationAdd.type    = ADDR_128B;
-   memcpy(&packet->l3_destinationAdd.addr_128b[0],(*get_icmpv6rpl_vars()).dio.DODAGID,16);
-   
+   //memcpy(&packet->l3_destinationAdd.addr_128b[0],(*get_icmpv6rpl_vars()).dio.DODAGID,16);
+   uint8_t         manager_full_address[16];
+	   
+	   // retrieve my prefix and EUI64
+	memcpy(&manager_full_address[0],idmanager_getMyID(ADDR_PREFIX)->prefix,8); // prefix
+	memcpy(&manager_full_address[8],&manager_address,8);  // manager address
+   memcpy(&packet->l3_destinationAdd.addr_128b[0],&manager_full_address,16);
    // send
    outcome = opencoap_send(
       packet,
