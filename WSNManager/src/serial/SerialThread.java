@@ -145,6 +145,9 @@ public class SerialThread extends Thread{
 			default:
 				System.out.println("Frame code "+ _readBuffer.get(0));
 				
+				if((int)_readBuffer.get(0)==0){
+					kill();
+				}
 				_readBuffer.clear();
 				throw(new Exception(type + " unsupported"));
 			}		

@@ -2,7 +2,6 @@ package network_model;
 
 import stack.CoapMessage;
 import stack.IPHC_Data;
-import stack.SourceRoutingHeader;
 import stack.UDP_Datagram;
 
 /**
@@ -24,8 +23,8 @@ public class CoAPBuilder{
 		
 		//m.printRaw(m.getMessage());
 		UDP_Datagram d = new UDP_Datagram(m);
-		IPHC_Data ipv6Header;
 		//d.printRaw(d.getMessage());
+<<<<<<< HEAD
 		//check if source routing is necessary
 		boolean directNeighbor = _model.getRootMote().getNeighborTable().containsKey(dest64);
 		
@@ -42,19 +41,23 @@ public class CoAPBuilder{
 			ipv6Header = new IPHC_Data(d._destAddr64,d.getMessage(),false);
 		}
 	
+=======
+		//source routing
+>>>>>>> dd61c34712e171aab8bc2ec407eafb34db510180
 		
+		IPHC_Data hc = new IPHC_Data(d);
+		//hc.printRaw(hc.getMessage());
 		
-		//now we have iphc all we need to do is append 64 bit address and send to serial processing
-		byte[] headerBytes = ipv6Header.getMessage();
-		byte[] dest = ipv6Header._destAddr64;
-		byte[] finalMessage = new byte[headerBytes.length+9];
+		//now we have iphc all we need to do is append 64 bit address and send
+		byte[] hcArr = hc.getMessage();
+		byte[] dest = hc.destAddr64;
+		byte[] finalMessage = new byte[hcArr.length+9];
 		finalMessage[0] = (byte) ("D".charAt(0)&0xFF);
-		//prepend the iphc header by nextOrPreviousHop, in this case next hop
 		for(int i = 0;i<8;i++){
 			finalMessage[i+1] = dest[i];
 		}
-    	for(int i = 0; i< headerBytes.length;i++){
-    		finalMessage[i+9] = headerBytes[i];
+    	for(int i = 0; i< hcArr.length;i++){
+    		finalMessage[i+9] = hcArr[i];
     	}
     	return finalMessage;
 	}

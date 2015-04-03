@@ -317,7 +317,7 @@ void neighbors_blacklist_toggle(open_addr_t* address)
         }
     }
 }
- 
+
 /**
 
 \brief Indicate some (non-ACK) packet was received from a neighbor.
@@ -613,12 +613,13 @@ bool debugPrint_neighbors() {
 
 
 
-debugNeighborEntry_t* neighbors_table_entry() {
+debugNeighborEntry_t* neighbors_table_entry(int rowNum) {
    debugNeighborEntry_t* temp = (debugNeighborEntry_t*) malloc(sizeof(debugNeighborEntry_t));
    //neighbors_vars.coapRow=(neighbors_vars.coapRow+1)%MAXNUMNEIGHBORS;
-   temp->row=neighbors_vars.coapRow;
-   temp->neighborEntry=neighbors_vars.neighbors[neighbors_vars.coapRow];
-neighbors_vars.coapRow=(neighbors_vars.coapRow+1)%MAXNUMNEIGHBORS;
+   temp->row=rowNum;//neighbors_vars.coapRow;
+	temp->neighborEntry=neighbors_vars.neighbors[rowNum];   
+//temp->neighborEntry=neighbors_vars.neighbors[neighbors_vars.coapRow];
+//neighbors_vars.coapRow=(neighbors_vars.coapRow+1)%MAXNUMNEIGHBORS;
    return temp;
 }
 
@@ -693,7 +694,7 @@ void registerNewNeighbor(open_addr_t* address,
 	    //send a signal for update
 	debugNeighborEntry_t* temp = (debugNeighborEntry_t*) malloc(sizeof(debugNeighborEntry_t));
 	temp->neighborEntry=neighbors_vars.neighbors[i];
-	update(temp, i, 'a');
+	update(temp, i, 'n');
 
    }
 }

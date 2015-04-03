@@ -37,9 +37,6 @@ public class NeighborEntry
     
     private String _iid64Hex;
    // coap://141592000013cb23/n GET
-    
-    //added boolean blocked to constrain routing
-    private boolean _blocked = false;
     public NeighborEntry(ArrayList<Byte> _data){
     	
     	row=_data.get(4);
@@ -81,7 +78,7 @@ public class NeighborEntry
 
         _iid64Hex = "";
         for(int i = 0 ; i < 8;i++){
-        	 _iid64Hex =  _iid64Hex + String.format("%2s", Integer.toHexString(( addr_64b[i]&0xFF))).replace(' ','0');
+        	 _iid64Hex =  _iid64Hex + Integer.toHexString(( addr_64b[i]&0xFF));
 		}
         
         
@@ -115,6 +112,7 @@ public class NeighborEntry
     * @param _data
     */
  public NeighborEntry(byte[] _data){
+    	
     	row=_data[1]; //1
         used=_data[2]; //2
         
@@ -136,7 +134,7 @@ public class NeighborEntry
 
         _iid64Hex = "";
         for(int i = 0 ; i < 8;i++){
-        	 _iid64Hex =  _iid64Hex + String.format("%2s", Integer.toHexString(( addr_64b[i]&0xFF))).replace(' ','0');
+        	 _iid64Hex =  _iid64Hex + Integer.toHexString(( addr_64b[i]&0xFF));
 		}
         
         
@@ -164,17 +162,6 @@ public class NeighborEntry
         
         
     }
- 
- 	public void block(){
- 		_blocked = true;
- 	}
- 	public void unblock(){
- 		_blocked = false;
- 	}
- 	
- 	public boolean isBlocked(){
- 		return _blocked;
- 	}
 
     public String getiid64Hex(){
     	return _iid64Hex;
@@ -233,7 +220,7 @@ public class NeighborEntry
     	switch(base){
     	case "hex":
     		for(int i = 0 ; i < byteArr.length;i++){
-    			s = s+" " + String.format("%2s", Integer.toHexString(( byteArr[i]&0xFF))).replace(' ', '0');
+    			s = s+" " + Integer.toHexString((byteArr[i]&0xFF));
     		}
     		return s + "] ";
     	default:

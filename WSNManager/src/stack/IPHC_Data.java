@@ -24,27 +24,24 @@ x		Is destination address multicast?
 xx 		Destination Address mode
 */
 public class IPHC_Data {
-
+ private byte firstbyte = 0b01111000;
+ private byte secondbyte = 0b00000001;
+ private byte nextHeader = 0x11;
+ private byte hopLimit = 0b01000000;
  private byte[] srcAddr128 = new byte[16];
- public byte[] destPrefix64 = new byte[8];
- public byte[] _destAddr64 = new byte[8];
+ private byte[] destPrefix64 = new byte[8];
+ public byte[] destAddr64 = new byte[8];
  //iphc payload, not including header
- private byte[] _upperLayerHeaders;
+ private byte[] payload;
  //iphc header and payload
  private byte[] _messageBytes = new byte[0];
  //udp or icmpv6
  private byte[] _nextHeaderData = new byte[0];
 private String _protocol;
  
-/**
- * Constructor, final layer before sending to serial for mote in network
- * @param destAddr64
- * @param upperLayerHeaders
- * @param sourceRoute
- */
- public IPHC_Data(byte[] destAddr64, byte[] upperLayerHeaders, boolean sourceRoute){
-	 _destAddr64 = destAddr64;
-	 _upperLayerHeaders = upperLayerHeaders;
+ public IPHC_Data(UDP_Datagram d){
+	 destAddr64 = d._destAddr64;
+	 payload = d.getMessage();
 	 for(int i = 0 ; i < 8;i++){
 		 srcAddr128[i] =WSNManager.NETWORK_PREFIX[i];
 	 }
@@ -52,62 +49,37 @@ private String _protocol;
 		 srcAddr128[i+8]=WSNManager.ROOT_ID[i];
 	 }
 	 //System.out.println(destaddr64.length);
-	 if(sourceRoute){
-	 packageMessageSourceRoute();
-	 }else{
+	 
 	 packageMessage();
-	 }
  }
  
- 
  /**
-  * source routing options
+  * creates the IPHC header and stores in messagebytes
+  * note that payload is the iphc payload which does not include the header
   */
- private void packageMessageSourceRoute() {
-	 byte[] b = new byte[2+1+1+srcAddr128.length+_upperLayerHeaders.length];
-	 b[0] = 0b01111000;
-	 b[1] = 0b00000011; //destination address mode is 3, the destination address is fully elided for source routing
-	 b[2] = 0x2b;		// next header up the stack is source routing header protocol number 0x2b (decimal 43)
-	 b[3] = 0b01000000; // hop limit 
+ private void packageMessage() {
+	 byte[] b = new byte[2+1+1+srcAddr128.length+destAddr64.length+payload.length];
+	 b[0] = firstbyte;
+	 b[1] = secondbyte;
+	 b[2] = nextHeader;
+	 b[3] = hopLimit;
 	 int index = 4;
 	 for(int i = 0 ; i < srcAddr128.length;i++){
 		 b[index] = srcAddr128[i];
 		 index++;
 	 }
-	 for(int i = 0; i<_upperLayerHeaders.length;i++){
-		 b[index] = _upperLayerHeaders[i];
+	 for(int i=0;i<destAddr64.length;i++){
+		 b[index] = destAddr64[i];
+		 index++;
+	 }
+	 for(int i = 0; i<payload.length;i++){
+		 b[index] = payload[i];
 		 index++;
 	 }
 	 _messageBytes = b;
-	
 }
 
 /**
-  * creates the IPHC header and stores in messagebytes
-  */
- private void packageMessage() {
-	 byte[] b = new byte[2+1+1+srcAddr128.length+_destAddr64.length+_upperLayerHeaders.length];
-	 b[0] = 0b01111000;
-	 b[1] = 0b00000001;//destination address mode is 1, the destination address is 64b
-	 b[2] = 0x11;//next header up the stack is UDP header
-	 b[3] = 0b01000000;
-	 int index = 4;
-	 for(int i = 0 ; i < srcAddr128.length;i++){
-		 b[index] = srcAddr128[i];
-		 index++;
-	 }
-	 for(int i=0;i<_destAddr64.length;i++){
-		 b[index] = _destAddr64[i];
-		 index++;
-	 }
-	 for(int i = 0; i<_upperLayerHeaders.length;i++){
-		 b[index] = _upperLayerHeaders[i];
-		 index++;
-	 }
-	 _messageBytes = b;
-}
-
-/**From Mote
  * Constructor for parsing iphc header and data, deriving fields, etc
  * @param ipv6data
  * @param l2sender
@@ -217,21 +189,21 @@ public IPHC_Data(byte[] ipv6data, byte[] l2sender, byte[] l2receiver) {
 				nhPtr = nhPtr+8;
 				
 				for(int i = 0 ; i <8;i++){
-					_destAddr64[i] = ipv6data[i+nhPtr];
+					destAddr64[i] = ipv6data[i+nhPtr];
 				}
 				nhPtr = nhPtr + 8;
 				break;
 			case 1:
 				destPrefix64 = WSNManager.NETWORK_PREFIX;
 				for(int i = 0 ; i <8;i++){
-					_destAddr64[i] = ipv6data[i+nhPtr];
+					destAddr64[i] = ipv6data[i+nhPtr];
 				}
 				nhPtr = nhPtr+ 8;break;
 			case 2:nhPtr = nhPtr+2;break;
 			case 3:
 				//both prefix and iid elided, prefix same as manager, iid derived from pseudo header passed as argument
 				destPrefix64 = WSNManager.NETWORK_PREFIX;
-				_destAddr64 = l2receiver;
+				destAddr64 = l2receiver;
 				break;
 			}
 		} else{
@@ -289,8 +261,7 @@ public byte[] getSrcAddr64(){
 public String getSrc64bAsHexString(){
 	String s = "";
 	for(int i = 0 ; i < 8 ; i++){
-		s=s+String.format("%2s", Integer.toHexString(( srcAddr128[i+8]&0xFF))).replace(' ','0');
-	//	s=s+ Integer.toHexString(( srcAddr128[i+8]&0xFF));
+		s=s+ Integer.toHexString(( srcAddr128[i+8]&0xFF));
 	}
 	return s;
 }

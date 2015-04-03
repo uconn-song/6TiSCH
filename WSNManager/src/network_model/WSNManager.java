@@ -165,7 +165,7 @@ public class WSNManager{
 			ROOT_ID = b;
 			String rootid64Hex = "";
 			for(int i = 0 ; i<b.length;i++){
-				rootid64Hex = rootid64Hex +String.format("%2s", Integer.toHexString((b[i]&0xFF))).replace(' ','0');
+				rootid64Hex = rootid64Hex +Integer.toHexString( b[i]&0xFF);
 			}
 			ROOT_ID_HEX = rootid64Hex;
 			_networkModel.setRoot(rootid64Hex);

@@ -33,7 +33,7 @@ public class DFrame extends Frame {
 			setType("Data");
 			setData(data);
 			data.get(0);//"D"
-			_address =  String.format("%2s", Integer.toHexString(( data.get(2)&0xFF))).replace(' ','0')+ String.format("%2s", Integer.toHexString((data.get(1)&0xFF))).replace(' ','0');//address part 2
+			_address =  Integer.toHexString(data.get(2)&0xFF)+ Integer.toHexString(data.get(1)&0xFF);//address part 2
 			data.get(3);//asn 0 
 			data.get(4);//asn 1
 			data.get(5);//asn 2
@@ -73,19 +73,13 @@ public class DFrame extends Frame {
 					parseCoAP();
 				}
 			}else{
-					//TODO: implement forwarding to the internet. Construct regular ipv6 packet here?
-					//or convert to ipv4 destination?
-					printRaw(ipv6data);
-					System.out.println("implement forwarding outside network");
-					
-					//print out the address
-					for(int i =0;i< _iphcData.destPrefix64.length;i++){
-						System.out.print( Integer.toHexString(_iphcData.destPrefix64[i]&0xFF));
-					}
-					for(int i =0;i< _iphcData._destAddr64.length;i++){
-						System.out.print( Integer.toHexString(_iphcData._destAddr64[i]&0xFF));
-					}
-					System.out.println();
+				//TODO: implement forwarding to the internet. Construct regular ipv6 packet here?
+				//or convert to ipv4 destination?
+				printRaw(ipv6data);
+				System.out.println("implement packet forwarding to alternate destinations");
+				for(int i =0;i< _iphcData.destAddr64.length;i++){
+					System.out.print(Integer.toHexString(_iphcData.destAddr64[i]&0xFF));
+				}System.out.println();
 				}
 			
 			/*Packet p = new Packet(ipv6data, PacketAnalyzer.NETWORK_LEVEL);

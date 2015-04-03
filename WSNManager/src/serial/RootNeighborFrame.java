@@ -16,7 +16,7 @@ public class RootNeighborFrame extends Frame {
 		//type D - remove specified address from the root's neighbor
 		 address = "";
 		for (int i =0;i<8;i++){
-			address = address + String.format("%2s", Integer.toHexString((data.get(i+1)&0xFF))).replace(' ','0');
+			address = address + Integer.toHexString(data.get(i+1)&0xFF);
 		}
 	}
 	

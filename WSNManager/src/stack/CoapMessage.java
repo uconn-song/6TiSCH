@@ -88,12 +88,10 @@ public class CoapMessage extends ByteMessage {
 	}
 	private void parseCoAPMessage(byte[] toParse) {
 		
-		byte byte0 = toParse[0];
+		byte b = toParse[0];
 		//System.out.println(ByteMessage.byteToString(b) +" " + ((b&_verMask)>>6) + " " + ByteMessage.byteToString((byte) _verMask));
-		//verify CoAP version
-		if(((byte0&_verMask)>>6)!=1) throw new IllegalArgumentException("wrong CoAP version");
-		//verify CoAP token length is expected length of 1
-		_TKL = (byte) (byte0&_TKLMask)&0xFF;
+		if(((b&_verMask)>>6)!=1) throw new IllegalArgumentException("wrong CoAP version");
+		_TKL = (byte) (b&_TKLMask)&0xFF;
 		if(_TKL>1) throw new IllegalArgumentException("token length too long");
 		
 		//two part coap code determining message type
@@ -101,41 +99,33 @@ public class CoapMessage extends ByteMessage {
 		int codeA = (code & 0b11100000)>>5;
 		int codeB = code & 0b00011111;
 		//printRaw(toParse);
-		//expect response message which is code 2
 		if(codeA ==0){
 			System.out.println("get post put implement in coapMessage parsing");
 		}
 		else if(codeA != 2) throw new IllegalArgumentException( "COAP ERROR : " + COAP_CODES.get(codeA+"."+codeB));
 		
-		//unused currently
 		int MessageID = toParse[2]<<8+toParse[3];
-		
+		//System.out.println(MessageID);
 		if(_TKL==1){
 		_token = toParse[4];
 		}
-		
 		//if length = 5 then header and token is all this packet consists of
 		if(toParse.length==4 || toParse.length==5) return;
 		
-		//keep counter on where payload should be
 		int payloadMarker = 5;
-		//detect options
 		int lastOptionCode = 0;
 		boolean optionsFound=false;
-		//check for options, check for 0xFF payload flag 
+		//check for options
 		while(payloadMarker< toParse.length){
 			if((toParse[payloadMarker]&0xFF)==0xFF){
 				payloadMarker++;
 				break;
 			}
-			//should not reach this line
 			optionsFound=true;	
 			payloadMarker++;
 		}
-		
 		if(optionsFound) throw new IllegalArgumentException("Options should not be added to messages to manager");
 		//if payload size > 0
-		
 		if(toParse.length-1 >= payloadMarker){
 			_payload = new byte[toParse.length-payloadMarker];
 			for(int i  = 0; i< toParse.length-payloadMarker;i++){
