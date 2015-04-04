@@ -92,6 +92,11 @@ public class GraphPanel extends ContentPanel implements MouseListener,KeyListene
 		
 	}
 
+	
+	/*
+	 * 
+	 * currently no support for clicking on edge****
+	 */
 	private void handleEdgePress(String id, GraphicElement element, int button) {
 		// TODO Auto-generated method stub
 		System.out.println("Handle edge clicks in GraphPanel");
