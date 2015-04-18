@@ -105,7 +105,7 @@ public class GraphPanel extends ContentPanel implements MouseListener,KeyListene
 	}
 
 	private void handleNodePress(String id, int button) {
-		_manager.send(new CoAPBuilder(_networkModel).getSerialPacket("GET", "n", id, new byte[]{(byte)0xFF,1}));
+		_manager.send(new CoAPBuilder(_networkModel, "GET", "n", id, new byte[]{(byte)0xFF,1}).getSerialPacket());
 		
 		MoteInfoFrame f = new MoteInfoFrame(id, _networkModel.getMote(id), _networkModel, _manager);
 		f.setVisible(true);

@@ -11,6 +11,8 @@ import java.util.IllegalFormatException;
 
 import javax.swing.JPanel;
 
+import Acknowledgements.CoAPAckTimer;
+
 
 import network_model.CoAPBuilder;
 import network_model.NeighborEntry;
@@ -145,8 +147,10 @@ public class ControlPanel extends JPanel implements ConsoleCommandListener, Seri
 		
 		String resource = iidResourcePair[1].split(" ")[0];
 		String method = iidResourcePair[1].split(" ")[1];
+		CoAPBuilder message = new CoAPBuilder(_connectionManager.getNetworkModel(),method, resource, iid, null);
 		
-    	_connectionManager.send(new CoAPBuilder(_connectionManager.getNetworkModel()).getSerialPacket(method, resource, iid, null));
+		new Thread(new CoAPAckTimer(5, 2000, message.getMessageID(), message.getSerialPacket(), _connectionManager)).run();
+    	_connectionManager.send(message.getSerialPacket());
 	}
 
 

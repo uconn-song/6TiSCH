@@ -102,7 +102,19 @@ public class WSNManager{
 		_LBRConnection.addSerialListener("Network Model", _networkModel);
 		
 	}
-
+	
+	
+	public void addComponentListeningOnSerial(String id, SerialListener l){
+		_LBRConnection.addSerialListener(id, l);
+	}
+	
+	/**
+	 * currently used for removing acknowledgment threads which have expired
+	 * @param id
+	 */
+	public void removeComponentListeningOnSerial(String id){
+		_LBRConnection.removeSerialListener(id);
+	}
 	public void closeConnection() {
 		_LBRConnection.ShutDown();
 	}

@@ -145,12 +145,11 @@ public class CoapMessage extends ByteMessage {
 		*/
 	}
 	
-	/**
-	 * Constructors for building CoAP Messages
+	/** **Note this constructor is only used in the control panel
+	 * Constructors for building CoAP Messages with no payload
 	 * @param type
 	 * @param coapURI
 	 */
-
 	public CoapMessage(String type, String coapURI) {
 		_GLBmessageID = _GLBmessageID++ % 65535;
 		_token = 1;
@@ -170,13 +169,9 @@ public class CoapMessage extends ByteMessage {
 
 	
 
-	/**
-	 * Debug CoapMessage only supported type is GET URIPath like "l" for led app
-	 * in firware DESTIID like "14159200000d2616" one string all 8 bytes must be
-	 * represented (0 as 00)
-	 * 
+	/** Main constructor used for building CoAP packets to send to motes
 	 * @param type (GET/PUT/ETC)
-	 * @param URIPath
+	 * @param URIPath "l", "n" , "b" resource endpoint on mote
 	 * @param DestIID 64B address in hex string format (pad bytes to be 2 characters each so 0->00)
 	 * @param payload payload for the CoAP message must be under 46? bytes
 	 */
@@ -292,6 +287,9 @@ public class CoapMessage extends ByteMessage {
 	}
 	public byte[] getPayload() {
 		return _payload;
+	}
+	public int getMessageID() {
+		return _messageID;
 	}
 
 	// PAYLOAD

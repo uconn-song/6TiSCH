@@ -12,15 +12,13 @@ import stack.UDP_Datagram;
 public class CoAPBuilder{
 	
 	private NetworkModel _model;
-
-	public CoAPBuilder(NetworkModel model) {
+	private byte[] _packetBytes;
+	private int _messageID;
+	public CoAPBuilder(NetworkModel model,String method, String URIPath, String dest64, byte[] payload) {
 		_model = model;
-	}
-
-	//tk
-	public byte[] getSerialPacket(String method, String URIPath, String dest64, byte[] payload){
-		CoapMessage m = new CoapMessage(method,URIPath, dest64,payload);
 		
+		CoapMessage m = new CoapMessage(method,URIPath, dest64,payload);
+		_messageID = m.getMessageID();
 		//m.printRaw(m.getMessage());
 		UDP_Datagram d = new UDP_Datagram(m);
 		IPHC_Data ipv6Header;
@@ -55,6 +53,21 @@ public class CoAPBuilder{
     	for(int i = 0; i< headerBytes.length;i++){
     		finalMessage[i+9] = headerBytes[i];
     	}
-    	return finalMessage;
+    	
+    	_packetBytes = finalMessage;
+    	
+	}
+
+	
+	public int getMessageID(){
+		return _messageID;
+	}
+	
+	
+	/**
+	 * @return byte message which can be sent using WSNManager.send() method
+	 */
+	public byte[] getSerialPacket(){
+		return _packetBytes;
 	}
 }
