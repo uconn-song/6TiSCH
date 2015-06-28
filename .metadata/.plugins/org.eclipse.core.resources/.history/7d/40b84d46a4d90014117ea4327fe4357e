@@ -1,0 +1,45 @@
+package stack;
+
+import java.util.ArrayList;
+
+import network_model.NetworkModel;
+
+public class SourceRoutingHeader {
+	private byte[] headerBytes;
+	public SourceRoutingHeader(NetworkModel _model, String dest64,
+			int prefixBytesElided) {
+		System.out.println("implement source routing header");
+			byte             local_CmprE;
+		   byte              local_CmprI;
+		   byte             numAddr;
+		   byte             hlen;
+		   
+		   //begin building source routing path
+		   ArrayList<String> path = new ArrayList<String>();
+		   /*
+		    * Build path backwards
+		    * possible algorithm
+		    * 	start from destination mote and find preferred parent and record
+		    * 		verify that path is not blocked by manager, otherwise choose neighbor with lowest
+		    *   find preferred parent of that mote and record in arraylist
+		    *   repeat until reaching root.
+		    */
+		   
+	
+	}
+
+}
+
+/*     0                   1                   2                   3
+      0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
+     +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+     |  Next Header  |  Hdr Ext Len  | Routing Type  | Segments Left |
+     +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+     | CmprI | CmprE |  Pad  |               Reserved                |
+     +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+     |                                                               |
+     .                                                               .
+     .                        Addresses[1..n]                        .
+     .                                                               .
+     |                                                               |
+     +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+*/

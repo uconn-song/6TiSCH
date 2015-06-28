@@ -1,0 +1,21 @@
+package gui;
+
+import java.awt.GridBagLayout;
+
+import gui_components.ContentPanel;
+
+import javax.swing.JFrame;
+import javax.swing.JPanel;
+
+import network_model.Mote;
+
+public class MoteInfoFrame extends JFrame{
+	public MoteInfoFrame(String moteID, Mote mote){
+		super(moteID);
+		setLayout(new GridBagLayout());
+		ContentPanel p = new ContentPanel();
+		
+		p.setVisible(true);
+		add(p);
+	}
+}

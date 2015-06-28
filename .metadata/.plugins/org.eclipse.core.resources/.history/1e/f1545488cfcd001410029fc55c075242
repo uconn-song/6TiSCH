@@ -1,0 +1,18 @@
+package gui;
+
+import gui_components.ContentPanel;
+
+import javax.swing.JFrame;
+import javax.swing.JPanel;
+
+import network_model.Mote;
+
+public class MoteInfoFrame extends JFrame{
+	public MoteInfoFrame(String moteID, Mote mote){
+		super(moteID);
+		ContentPanel p = new ContentPanel();
+		JPanel p2 = new JPanel();
+		p.switchComponent(p2);
+		add(p);
+	}
+}

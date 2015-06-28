@@ -1,0 +1,66 @@
+package Acknowledgements;
+
+import network_model.WSNManager;
+import serial.Frame;
+import serial.SerialListener;
+
+public class CoAPAckTimer implements Runnable, SerialListener {
+	private int _retryLimit;
+	private int _retryPeriod;
+	private int _CoAPMessageID;
+	private byte[] _CoAPPacketBytes;
+	private WSNManager _manager;
+	private boolean _ackReceived=false;
+	
+	/**
+	 * 
+	 * @param retryLimit the maximum number of times to send the message if no ack received
+	 * @param retryPeriod the time between resending message
+	 * @param CoAPMessageID the messageID of the CoAP message sent, the ack packet is expected to have the
+	 * same message ID.
+	 * @param CoAPPacketBytes the message originally sent, used for retransmission of packet on failure to receive the ack by timeout
+	 */
+	public CoAPAckTimer(int retryLimit, int retryPeriod, int CoAPMessageID, byte[] CoAPPacketBytes, WSNManager manager){
+		//assume that the initial CoAP packet has been sent, this is merely for retransmission and ACK detection
+		_retryLimit = retryLimit;
+		_retryPeriod = retryPeriod;
+		_CoAPMessageID = CoAPMessageID;
+		_CoAPPacketBytes = CoAPPacketBytes;
+		_manager = manager;
+		//add this to the list of listeners to allow 
+		_manager.addComponentListeningOnSerial(_CoAPMessageID+"", this);
+		
+		
+		
+	}
+	@Override
+	public void run() {
+		int retryCount =0;
+		while(retryCount<_retryLimit){
+			if(_ackReceived){
+				_manager.removeComponentListeningOnSerial(_CoAPMessageID+"");
+				return;
+			}
+			try {
+				Thread.sleep(_retryPeriod);
+			} catch (InterruptedException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			System.out.println( "s");
+			retryCount++;
+		}
+		
+		_manager.removeComponentListeningOnSerial(_CoAPMessageID+"");
+		System.out.println("Message failed to acknowledge after" + _retryLimit + "tries");
+		//(new Thread(new AckTimer())).start();
+		
+		
+	}
+	@Override
+	public void acceptFrame(Frame collectedFrame) {
+		System.out.println("check for ack, CoAP Ack Timer");
+		
+	}
+	
+}

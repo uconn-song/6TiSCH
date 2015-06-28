@@ -27,9 +27,6 @@ Write WSNManager software to visualize network
 Write WSNManager software to modify network parameters  
 
 
-potential roadblocks:
-[SOLVED nice job guys]
-https://openwsn.atlassian.net/wiki/display/OW/OpenVisualizer#OpenVisualizer-CodeOrganization
-looks as if we are only getting neighbor tables of other motes if they are USB connected. We will need to write our own FW programs to forward this information to the dag root.
+
 
 

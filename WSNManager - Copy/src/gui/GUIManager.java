@@ -1,0 +1,152 @@
+package gui;
+
+
+import graphStream.NetworkGraph;
+import gui_components.ContentPanel;
+import java.awt.Color;
+import java.awt.GridBagConstraints;
+import java.awt.GridBagLayout;
+import java.awt.Insets;
+import java.util.HashMap;
+import javax.swing.JComponent;
+import javax.swing.JFrame;
+import javax.swing.WindowConstants;
+import network_model.NetworkModel;
+import network_model.WSNManager;
+
+
+public class GUIManager extends JFrame{
+
+	private ContentPanel _contentArea = new ContentPanel();
+	private ContentPanel _secondaryContentArea = new ContentPanel();
+	private ControlPanel _controlPanel;
+	private HashMap<String,JComponent> _panels = new HashMap<String,JComponent>();
+	private NetworkGraph _graph;
+	private ContentPanel _graphPanel;
+	private WSNManager _wsnManager;
+
+	
+	public GUIManager(ControlPanel p, NetworkModel _networkModel, WSNManager manager) {
+		_wsnManager = manager;
+		_controlPanel = p;
+		setLayout(new GridBagLayout());
+		GridBagConstraints c = new GridBagConstraints();
+	/*	c.weightx = 1.0;
+		c.weighty = 0.2;
+		c.gridx = 0;
+		c.gridy = 0;
+		c.gridwidth = 2;
+		c.fill = GridBagConstraints.BOTH;
+
+		_menu = new JMenuBar();
+
+		_menu.add(new JMenu("SDF"));
+		add(_menu, c);
+	*/
+		// add main content area (left)
+		c.weightx = 0.5;
+		c.weighty = 0.9;
+		c.gridwidth = 1;
+		c.gridy = 1;
+		c.insets = new Insets(10, 10, 10, 10);
+		getContentPane().add(_contentArea, c);
+
+		// add secondary content area (right)
+		c.weightx = 0.5;
+		c.gridx = 1;
+		getContentPane().add(_secondaryContentArea, c);
+		getContentPane().setBackground(Color.DARK_GRAY);
+		//need to add reference to the manager so it can respond to clicks
+		initializeGraph(_networkModel);
+		pack();
+		//setVisible(true);
+		setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
+		_panels.put("control panel", _controlPanel);
+		
+		
+		JFrame f = new JFrame();
+		f.getContentPane().add(_controlPanel);
+		f.pack();
+		f.setVisible(true);
+		f.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
+		
+		
+		JFrame f2 = new JFrame();
+		f2.getContentPane().add(_graphPanel);
+		f2.pack();
+		f2.setVisible(true);
+		f2.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
+		
+		//new JFrame().add(_controlPanel).setVisible(true);
+		//new JFrame().add(_graphPanel).setVisible(true);
+		//switchPanel1("control panel");
+		//switchPanel2("graph");
+		
+	}
+
+	
+	
+	private void initializeGraph(NetworkModel _networkModel) {
+		_graph = new NetworkGraph("embedded");
+		
+		_graphPanel = new GraphPanel(_graph,_networkModel, _wsnManager);
+	/*	Layout layout = new SpringBox(false);
+		    _graph.addSink(layout);
+		    layout.addAttributeSink(_graph);
+		    while(layout.getStabilization() < 0.9){
+		        layout.compute();
+		    }   */
+		    
+	
+//		v.getCamera().setViewPercent(1.2);
+//		v.getCamera().setViewCenter(0, 0, 0);
+//		v.getCamera().setAutoFitView(true);
+		
+		addComponent("graph",_graphPanel);
+		
+		
+		
+	}
+
+	/**
+	 * choose which JPanel to view on the right panel
+	 */
+	public void switchPanel2(String component) {
+		try{
+		_secondaryContentArea.switchComponent(_panels.get(component));
+		}
+		catch(NullPointerException e){
+			//do nothing do not switch 
+		}
+		
+	}
+	
+	/**
+	 * Choose which JPanel to view on the left panel
+	 * @param component
+	 */
+	public void switchPanel1(String component) {
+		try{
+			_contentArea.switchComponent(_panels.get(component));
+		}
+			catch(NullPointerException e){
+				
+			}
+	}
+
+	/**
+	 * register a component with the gui manager
+	 * @param string
+	 * @param c
+	 */
+	public void addComponent(String string, JComponent c) {
+		_panels.put(string, c);
+		
+	}
+
+
+
+	public NetworkGraph getGraph() {
+		return _graph;
+	}
+}

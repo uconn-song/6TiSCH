@@ -1,0 +1,31 @@
+package Acknowledgements;
+
+import serial.Frame;
+import serial.SerialListener;
+
+public class CoAPAckTimer implements Runnable, SerialListener {
+	private int _retryLimit;
+	
+	/**
+	 * 
+	 * @param retryLimit the maximum number of times to send the message if no ack received
+	 * @param retryPeriod the time between resending message
+	 */
+	public AckTimer(int retryLimit, int retryPeriod){
+		
+		//on extending this timer call the initial CoAP message
+		
+	}
+	@Override
+	public void run() {
+		//(new Thread(new AckTimer())).start();
+		
+		
+	}
+	@Override
+	public void acceptFrame(Frame collectedFrame) {
+		// TODO Auto-generated method stub
+		
+	}
+	
+}

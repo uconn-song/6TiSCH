@@ -1,0 +1,12 @@
+package stack;
+
+import network_model.NetworkModel;
+
+public class SourceRoutingHeader {
+	private byte[] headerBytes;
+	public SourceRoutingHeader(NetworkModel _model, String dest64,
+			int prefixBytesElided) {
+		System.out.println("implement source routing header");
+	}
+
+}

@@ -1,0 +1,209 @@
+package serial;
+
+import jNetPcap.JPacketTest;
+
+import java.io.UnsupportedEncodingException;
+import java.rmi.UnexpectedException;
+import java.util.ArrayList;
+import java.util.Arrays;
+
+import packet.PacketAnalyzer;
+import packet.IPUtils;
+import packet.IPHCPacketAnalyzer;
+import packet.PacketAnalyzer.Packet;
+import stack.CoapMessage;
+import stack.IPHC_Data;
+import stack.UDP_Datagram;
+/**
+ * Data frame sent by the mote, this can include messages for the manager, RPL messages forwarded from the network,
+ * and messages which are meant to be forwarded out of the network.
+ */
+public class DFrame extends Frame {
+
+		//This frame is used by the mote to indicate to the computer it is ready to receive data.
+		private String _address="";
+		private byte[] ipv6data;
+		private String _protocol;
+		private byte[] _L3_payload;
+		private CoapMessage _CoAPMessage;
+		private boolean _isCoAP_DFrame=false;
+		private IPHC_Data _iphcData;
+		
+		public DFrame(ArrayList<Byte> data) {
+			setType("Data");
+			setData(data);
+			data.get(0);//"D"
+			_address =  Integer.toHexString(data.get(2)&0xFF)+ Integer.toHexString(data.get(1)&0xFF);//address part 2
+			data.get(3);//asn 0 
+			data.get(4);//asn 1
+			data.get(5);//asn 2
+			data.get(6);//asn 3
+			data.get(7);//asn 4
+			ipv6data = new byte[data.size()-10-16];
+			
+			//For IPHC
+			byte[] l2receiver = new byte[8];
+			byte[] l2sender = new byte[8];
+			//fill in destination address (spoofed header for iphc)
+			for(int i = 8; i < 16;i++){
+				l2receiver[i-8] = _data.get(i);
+			}
+			//fill in source address (spoofed header for iphc)
+			for(int i =16; i<24;i++){
+				l2sender[i-16] = _data.get(i);
+			}
+			
+			//ipv6 payload
+			for(int i = 24 ; i < data.size()-2;i++)
+			{
+				ipv6data[i-24]=data.get(i);
+				//System.out.print("Data: " + byteToString(data.get(i))+"(0x"+Integer.toHexString(data.get(i)&0xFF)+") ");
+			}
+		
+			//decompress from iphc to derive ipv6 fields
+			System.out.println();
+			_iphcData = new IPHC_Data(ipv6data,l2sender,l2receiver);
+			_protocol = _iphcData.getNextHeaderProtocol();
+			_L3_payload = _iphcData.getNextHeader();
+			
+			//check if the packet is meant for this mote
+			
+			if(_iphcData.isDestinationRoot()){
+				if(_protocol.equals("UDP")){
+					parseCoAP();
+				}
+			}else{
+				//TODO: implement forwarding to the internet. Construct regular ipv6 packet here?
+				//or convert to ipv4 destination?
+				System.out.println("implement packet forwarding to alternate destinations");
+				for(int i =0;i< _iphcData.destAddr64.length;i++){
+					System.out.print(Integer.toHexString(_iphcData.destAddr64[i]&0xFF));
+				}System.out.println();
+				}
+			
+			/*Packet p = new Packet(ipv6data, PacketAnalyzer.NETWORK_LEVEL);
+			StringBuilder brief = new StringBuilder();
+			StringBuilder verbose = new StringBuilder();
+			IPHCPacketAnalyzer anal = new IPHCPacketAnalyzer();
+			p.llsender = llsender;
+			p.llreceiver=llreceiver;
+			anal.analyzePacket(p, brief, verbose);
+			//System.out.println(verbose.toString());
+			if(anal.isUDP()){
+			//printRaw(p.getPayload());
+			}
+			//new JPacketTest(ipv6data);
+			*/
+		}
+		
+		
+		/**
+		 * Parse the detected UDP Datagram as a CoAP message and store it in a CoAP message variable
+		 */
+		private void parseCoAP() {
+			try{
+			byte[] coapMess = new byte[_L3_payload.length-8];
+			for(int i =8;i<_L3_payload.length;i++){
+				coapMess[i-8] = _L3_payload[i];
+			}
+			_CoAPMessage = new CoapMessage(coapMess);
+			_isCoAP_DFrame = true;
+			}catch(IllegalArgumentException e){
+				/*Very strange sometimes error messages from mote side have checksum elided from udp...this is 
+				 * a hack to attempt to parse message as CoAP assuming checksum elided...no other way to check that
+				 * right now
+				 */
+				if(e.getMessage().equals("wrong CoAP version")){
+					try{
+						//printRaw(_L3_payload);
+						byte[] coapMess2 = new byte[_L3_payload.length-6];
+						
+						for(int i =0;i<_L3_payload.length-6;i++){
+							coapMess2[i] = _L3_payload[i+6];
+						}
+						System.out.println("coap mess attempt 2"); //printRaw(coapMess2);
+						_CoAPMessage = new CoapMessage(coapMess2);
+						_isCoAP_DFrame = true;
+					}catch(IllegalArgumentException e2){
+					System.out.println("Failed to parse UDP Datagram as CoAP: "+e2.getMessage());
+					}
+				}else{
+					System.out.println(e.getMessage());
+				}
+			}
+		}
+		
+
+
+		public boolean isCoAPMessage(){
+			return _isCoAP_DFrame;
+				
+		}
+		/**
+		 * attempt to decode DFrame as CoAP
+		 * @return CoapMessage
+		 */
+		public CoapMessage getCoAPMessage(){
+			if(!_isCoAP_DFrame) throw new IllegalArgumentException("Failed to decode DFrame as CoAP");
+			return _CoAPMessage;
+		}
+		
+	
+
+
+		@Override
+		public String toString(){
+			String toret= _address + " sent: ";
+			
+			if(_data.size()<15){
+			for(int i = 8 ; i < _data.size()-2;i++)
+			{
+				toret = toret+" " + byteToString(_data.get(i)) + "("+(char)(_data.get(i)&0xFF)+")" ;
+			}
+			}else{
+				for(int i = 8 ; i < _data.size()-2;i++)
+				{
+					toret = toret+" " + byteToString(_data.get(i));
+				}
+				
+				toret = toret+"\n";
+				for(int i = 8 ; i < _data.size()-2;i++)
+				{
+					toret = toret+" " + Integer.toHexString(_data.get(i)&0xFF);
+				}
+			}
+			
+			
+			
+			return toret;
+		}
+		
+		
+		public String convert(byte[] data) {
+		    StringBuilder sb = new StringBuilder(data.length);
+		    for (int i = 0; i < data.length; ++ i) {
+		        if (data[i] < 0) throw new IllegalArgumentException();
+		        sb.append((char) data[i]);
+		    }
+		    return sb.toString();
+		}
+		// Debug Functions
+		public void printRaw(byte[] b) {
+			for (int i = 0; i < b.length; i++) {
+				if (i > 0 && i % 4 == 0.0) {
+					System.out.println();
+				}
+				System.out.print(byteToString(b[i]) + " ");
+				// every 4 bytes new line
+			}
+			System.out.println();
+		}
+
+		/**
+		 * used to retrieve source mote for neighbor table
+		 */
+		public String getSrcMoteId64Hex() {
+			return _iphcData.getSrc64bAsHexString();
+		}
+		
+}
