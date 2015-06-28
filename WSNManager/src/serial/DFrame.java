@@ -1,16 +1,13 @@
 package serial;
 
-import jNetPcap.JPacketTest;
+
 
 import java.io.UnsupportedEncodingException;
 import java.rmi.UnexpectedException;
 import java.util.ArrayList;
 import java.util.Arrays;
 
-import packet.PacketAnalyzer;
-import packet.IPUtils;
-import packet.IPHCPacketAnalyzer;
-import packet.PacketAnalyzer.Packet;
+
 import stack.CoapMessage;
 import stack.IPHC_Data;
 import stack.UDP_Datagram;
@@ -61,7 +58,6 @@ public class DFrame extends Frame {
 			}
 		
 			//decompress from iphc to derive ipv6 fields
-			System.out.println();
 			_iphcData = new IPHC_Data(ipv6data,l2sender,l2receiver);
 			_protocol = _iphcData.getNextHeaderProtocol();
 			_L3_payload = _iphcData.getNextHeader();
@@ -88,19 +84,6 @@ public class DFrame extends Frame {
 					System.out.println();
 				}
 			
-			/*Packet p = new Packet(ipv6data, PacketAnalyzer.NETWORK_LEVEL);
-			StringBuilder brief = new StringBuilder();
-			StringBuilder verbose = new StringBuilder();
-			IPHCPacketAnalyzer anal = new IPHCPacketAnalyzer();
-			p.llsender = llsender;
-			p.llreceiver=llreceiver;
-			anal.analyzePacket(p, brief, verbose);
-			//System.out.println(verbose.toString());
-			if(anal.isUDP()){
-			//printRaw(p.getPayload());
-			}
-			//new JPacketTest(ipv6data);
-			*/
 		}
 		
 		
@@ -120,7 +103,7 @@ public class DFrame extends Frame {
 				 * a hack to attempt to parse message as CoAP assuming checksum elided...no other way to check that
 				 * right now
 				 */
-				System.out.println("Illegal Argument Exception");
+				System.out.println(e.getMessage());
 				if(e.getMessage().equals("wrong CoAP version")){
 					try{
 						//printRaw(_L3_payload);
@@ -129,7 +112,6 @@ public class DFrame extends Frame {
 						for(int i =0;i<_L3_payload.length-6;i++){
 							coapMess2[i] = _L3_payload[i+6];
 						}
-						System.out.println("coap mess attempt 2"); //printRaw(coapMess2);
 						_CoAPMessage = new CoapMessage(coapMess2);
 						_isCoAP_DFrame = true;
 					}catch(IllegalArgumentException e2){

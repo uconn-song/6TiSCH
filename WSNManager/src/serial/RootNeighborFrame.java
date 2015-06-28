@@ -23,4 +23,11 @@ public class RootNeighborFrame extends Frame {
 	public String getRemovedNeighborID(){
 		return address;
 	}
+	
+	@Override
+	public String toString(){
+		
+		return "Serial frame from root: neighbor removed";
+	
+	}
 }

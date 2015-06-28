@@ -59,12 +59,6 @@ private byte[] getMessageAsByteArray(){
 
 
 
-
-
-
-
-
-
 //Debug Functions
 public void printRaw(){
 	for(int i = 0 ; i < message.size();i++){
@@ -79,8 +73,7 @@ public void printRaw(){
 	System.out.println();
 }
 
-public static String byteToString(byte b)
-{
+public static String byteToString(byte b){
 	return String.format("%8s", Integer.toBinaryString(b&0xFF)).replace(' ', '0');
 }
 }

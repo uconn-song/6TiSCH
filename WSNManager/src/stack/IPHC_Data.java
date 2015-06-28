@@ -1,7 +1,4 @@
 package stack;
-
-import java.util.Arrays;
-
 import network_model.WSNManager;
 
 /*   
@@ -13,7 +10,7 @@ import network_model.WSNManager;
 
                     Figure 2: LOWPAN_IPHC base Encoding
 011		IPHC flag
-11		TF 11:  Traffic Class and Flow Label are elided. 
+11		TF 11:  Tra ffic Class and Flow Label are elided. 
 0		NH 0: Full 8 bits for Next Header are carried in-line.
 00		Hop Limit: Hop limit carried in-line
 0 		CID:	No additional 8-bit context identifer extension is used
@@ -64,9 +61,9 @@ private String _protocol;
   * source routing options
   */
  private void packageMessageSourceRoute() {
-	 byte[] b = new byte[2+1+1+srcAddr128.length+_upperLayerHeaders.length];
+	 byte[] b = new byte[2+1+1+srcAddr128.length+_destAddr64.length+_upperLayerHeaders.length];
 	 b[0] = 0b01111000;
-	 b[1] = 0b00000011; //destination address mode is 3, the destination address is fully elided for source routing
+	 b[1] = 0b00000001; //DAM = 1 64 b destination {destination address mode is 3, the destination address is fully elided for source routing}
 	 b[2] = 0x2b;		// next header up the stack is source routing header protocol number 0x2b (decimal 43)
 	 b[3] = 0b01000000; // hop limit 
 	 int index = 4;
@@ -74,12 +71,16 @@ private String _protocol;
 		 b[index] = srcAddr128[i];
 		 index++;
 	 }
+	 for(int i=0;i<_destAddr64.length;i++){
+		 b[index] = _destAddr64[i];
+		 index++;
+	 }
+	 
 	 for(int i = 0; i<_upperLayerHeaders.length;i++){
 		 b[index] = _upperLayerHeaders[i];
 		 index++;
 	 }
 	 _messageBytes = b;
-	
 }
 
 /**

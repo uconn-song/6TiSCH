@@ -9,5 +9,6 @@
 	<classpathentry kind="lib" path="src/gs-core-1.2-sources.jar"/>
 	<classpathentry kind="lib" path="src/gs-ui-1.2-sources.jar"/>
 	<classpathentry kind="lib" path="src/gs-ui-1.2.jar" sourcepath="src/gs-ui-1.2-sources.jar"/>
+	<classpathentry kind="lib" path="gs-algo-1.2.jar" sourcepath="gs-algo-1.2-sources.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>

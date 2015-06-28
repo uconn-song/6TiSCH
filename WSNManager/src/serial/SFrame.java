@@ -44,7 +44,7 @@ public class SFrame extends Frame {
 			_statusType = "2 DAGRANK";
 			_toStringMessage = " "+ ( ((_data.get(3) & 0xFF) << 8) | (_data.get(4) & 0xFF));
 			//this.byteToString(_data.get(3))+this.byteToString(_data.get(4))+
-			//1 Byte Payload
+			//1 Byte Payload serial data invalid
 			break;
 		case 3:
 			_statusType = "3 OUTBUFFERINDEXES";

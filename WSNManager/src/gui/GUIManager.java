@@ -2,7 +2,6 @@ package gui;
 
 
 import graphStream.NetworkGraph;
-import gui_components.ContentPanel;
 import java.awt.Color;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
@@ -17,13 +16,14 @@ import network_model.WSNManager;
 
 public class GUIManager extends JFrame{
 
-	private ContentPanel _contentArea = new ContentPanel();
-	private ContentPanel _secondaryContentArea = new ContentPanel();
+	private FormattedJPanel _contentArea = new FormattedJPanel(500,500);
+	private FormattedJPanel _secondaryContentArea = new FormattedJPanel(500,500);
 	private ControlPanel _controlPanel;
 	private HashMap<String,JComponent> _panels = new HashMap<String,JComponent>();
 	private NetworkGraph _graph;
-	private ContentPanel _graphPanel;
+	private FormattedJPanel _graphPanel;
 	private WSNManager _wsnManager;
+	private JFrame _graphFrame;
 
 	
 	public GUIManager(ControlPanel p, NetworkModel _networkModel, WSNManager manager) {
@@ -37,7 +37,6 @@ public class GUIManager extends JFrame{
 		c.gridy = 0;
 		c.gridwidth = 2;
 		c.fill = GridBagConstraints.BOTH;
-
 		_menu = new JMenuBar();
 
 		_menu.add(new JMenu("SDF"));
@@ -71,11 +70,11 @@ public class GUIManager extends JFrame{
 		f.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
 		
 		
-		JFrame f2 = new JFrame();
-		f2.getContentPane().add(_graphPanel);
-		f2.pack();
-		f2.setVisible(true);
-		f2.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
+		_graphFrame = new JFrame("Physical Topology");
+		_graphFrame.getContentPane().add(_graphPanel);
+		_graphFrame.pack();
+		
+		_graphFrame.setDefaultCloseOperation(WindowConstants.HIDE_ON_CLOSE);
 		
 		//new JFrame().add(_controlPanel).setVisible(true);
 		//new JFrame().add(_graphPanel).setVisible(true);
@@ -145,8 +144,15 @@ public class GUIManager extends JFrame{
 	}
 
 
-
 	public NetworkGraph getGraph() {
 		return _graph;
+	}
+
+
+
+	public void showGraph() {
+		_graphFrame.setVisible(true);
+		_graphPanel.setVisible(true);
+		_graphFrame.pack();
 	}
 }

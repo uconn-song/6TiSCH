@@ -10,7 +10,5 @@ public class MoteNode extends MultiNode {
 		super(graph, id);
 		super.addAttribute("ui.label",id);
 		//addAttribute("ui.text-size",20);
-		
 	}
-
 }

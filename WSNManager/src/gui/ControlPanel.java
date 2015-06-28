@@ -1,20 +1,34 @@
 package gui;
 
-import gui_components.Console;
-import gui_components.ConsoleCommandListener;
-import gui_components.ScrollableTextArea;
+
+import graphStream.RPLGraph;
 
 import java.awt.Color;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.IllegalFormatException;
+import java.util.Iterator;
+import java.util.Timer;
+import java.util.TimerTask;
 
+import javax.swing.DefaultComboBoxModel;
+import javax.swing.JButton;
+import javax.swing.JComboBox;
+import javax.swing.JLabel;
 import javax.swing.JPanel;
+import javax.swing.WindowConstants;
+
+import org.graphstream.ui.swingViewer.Viewer;
 
 import Acknowledgements.CoAPAckTimer;
 
 
 import network_model.CoAPBuilder;
+import network_model.Mote;
 import network_model.NeighborEntry;
 import network_model.WSNManager;
 
@@ -38,6 +52,7 @@ public class ControlPanel extends JPanel implements ConsoleCommandListener, Seri
 	private ScrollableTextArea _outputBot;
 	//handles communications to and from motes
 	private WSNManager _connectionManager;
+	private JComboBox<String> openPorts;
 
 	
 	public ControlPanel(WSNManager connectionManager){
@@ -49,24 +64,90 @@ public class ControlPanel extends JPanel implements ConsoleCommandListener, Seri
 		GridBagLayout l = new GridBagLayout();
 		setLayout(l);
 		GridBagConstraints c = new GridBagConstraints();
-		c.weightx = 1.0;
-		c.weighty = 1.0;
-		c.fill=  GridBagConstraints.BOTH;
-		c.gridx=0;
-		c.gridy=0;
-		c.ipady = 90;
-		_outputTop = new ScrollableTextArea();
-		_outputTop.getTextArea().addMouseListener(_outputTop);
-		add(_outputTop,c);
-		c.gridx=0;
-		c.gridy=1;
-		_outputBot = new ScrollableTextArea();
-		add(_outputBot,c);
-		_console = new Console(this);
-		c.fill=  GridBagConstraints.BOTH;
-		c.gridx=0;
-		c.gridy=2;
+			c.weightx = 1.0;  c.weighty = 1.0;
+			c.fill=  GridBagConstraints.BOTH;
+			c.gridx=0;  c.gridy=0;
+			c.gridwidth=4;
+			c.ipady = 90;
+			_outputTop = new ScrollableTextArea();
+			_outputTop.getTextArea().addMouseListener(_outputTop);
+		add(_outputTop,c);  //0,0
+		
+			c.gridx=0;	c.gridy=1;
+			_outputBot = new ScrollableTextArea();
+			_outputBot.getTextArea().addMouseListener(_outputBot);
+		add(_outputBot,c);  //0,1
+		
+			_console = new Console(this);
+			c.fill=  GridBagConstraints.BOTH;
+			c.gridx=0;	c.gridy=2; c.gridwidth=3;
 		add(_console,c);
+		
+		
+		c.ipady=0;c.anchor = GridBagConstraints.SOUTH;
+		JButton showGraph = new JButton("visualize network"); //x=3,y=3
+		c.gridx=3;c.gridy=2;c.fill=GridBagConstraints.NONE;
+		add(showGraph,c);
+		
+		showGraph.addActionListener(new ActionListener(){
+			@Override
+			public void actionPerformed(ActionEvent arg0) {
+				_connectionManager.showGraph();
+				}
+		});
+		
+		
+		
+		c.gridwidth=1; c.ipady=0;
+		
+		c.weighty=0.0;
+		c.anchor = GridBagConstraints.EAST;
+		//label for following drop down menu
+		JLabel portNameLabel = new JLabel("Port:"); //x=0, y=3
+			portNameLabel.setForeground(Color.WHITE);
+			c.gridx=0; c.gridy=3;
+			c.fill=GridBagConstraints.NONE;
+		add(portNameLabel,c);
+		c.fill=GridBagConstraints.HORIZONTAL;
+		c.anchor=GridBagConstraints.WEST;
+		//drop down menu of available port names
+		String[] portNames = SerialPortList.getPortNames();
+		openPorts = new JComboBox<String>(portNames); //x=1, y=3
+			c.gridx=1; c.gridy=3;
+		add(openPorts,c);
+
+		//submit button
+		c.gridx=2;c.gridy=3;
+		JButton connect = new JButton("connect"); //x=2,y=3
+		add(connect,c);
+		
+		
+		connect.addActionListener(new ActionListener(){
+			@Override
+			public void actionPerformed(ActionEvent arg0) {
+				try {
+					_connectionManager.addConnection((String) openPorts.getSelectedItem());
+				} catch (SerialPortException e) {	_console.printString( e.getMessage());	}
+			}
+			});
+		
+		JButton refreshPorts = new JButton("refresh"); //x=3,y=3
+		c.gridx=3;c.gridy=3;
+		add(refreshPorts,c);
+		
+		
+		refreshPorts.addActionListener(new ActionListener(){
+			@Override
+			public void actionPerformed(ActionEvent arg0) {
+				//refresh the list of open ports
+				String[] portNames = SerialPortList.getPortNames();
+				openPorts.setModel(new DefaultComboBoxModel(portNames));
+				//openPorts = new JComboBox<String>(portNames); //x=1, y=3
+				}
+		});
+		
+	
+		
 		
 		revalidate();
 		setVisible(true);
@@ -93,6 +174,9 @@ public class ControlPanel extends JPanel implements ConsoleCommandListener, Seri
 					_connectionManager.addConnection(portName);
 				} catch (SerialPortException e) {	_console.printString( e.getMessage());	}
 			}
+			else if(text.equals("refresh")){
+				refreshGraph();
+			}
 			else if(text.equals("close connection"))
 			{
 				String openPort = _connectionManager.getPortName();
@@ -106,6 +190,10 @@ public class ControlPanel extends JPanel implements ConsoleCommandListener, Seri
 			else if(text.equals("set root"))
 			{
 				setRoot();
+			}else if(text.equals("DAG")){
+				RPLGraph g =new RPLGraph("RPL", _connectionManager.getNetworkModel());
+				g.display().setCloseFramePolicy(Viewer.CloseFramePolicy.CLOSE_VIEWER);
+			
 			}
 			else if(text.equals("clear all")){
 				_outputTop.setText("");
@@ -128,6 +216,34 @@ public class ControlPanel extends JPanel implements ConsoleCommandListener, Seri
 		} 
 	}
 	
+	
+	/*********
+	 * 
+	 * 
+	 * TODO
+	 * 
+	 */
+	private void refreshGraph() {
+		//build a list of neighbors to solicit new information from
+		ArrayList<String> visitedNodes = new ArrayList<String>();
+		String rootid = _connectionManager.getNetworkModel().getRootMote().getID64();
+		Iterator<Mote> it = _connectionManager.getNetworkModel().getConnectedMotes();
+		while(it.hasNext()){
+			String id = it.next().getID64();
+			if(!id.equals(rootid)){
+				visitedNodes.add(id);
+			}
+			
+		}
+		
+		for(int i =0;i<visitedNodes.size();i++){
+			//send an acknowledgeable packet to each mote
+			CoAPBuilder b = new CoAPBuilder(_connectionManager.getGraph(), _connectionManager.getNetworkModel(), "GET", "n", visitedNodes.get(i), null, 0);
+			_connectionManager.send(b.getSerialPacket());
+			//new CoAPAckTimer(5, 110, b.getMessageID(), b.getSerialPacket(), _connectionManager).run();
+		}
+	}
+
 	private void setRoot() {
 		byte[] data = new byte[]{(byte) "R".charAt(0),(byte)"Y".charAt(0),1,1,1,1,1,1,1,1};
 		_connectionManager.send(data);
@@ -147,10 +263,10 @@ public class ControlPanel extends JPanel implements ConsoleCommandListener, Seri
 		
 		String resource = iidResourcePair[1].split(" ")[0];
 		String method = iidResourcePair[1].split(" ")[1];
-		CoAPBuilder message = new CoAPBuilder(_connectionManager.getNetworkModel(),method, resource, iid, null);
+		CoAPBuilder message = new CoAPBuilder(_connectionManager.getGraph(), _connectionManager.getNetworkModel(),method, resource, iid, null,0);
 		
-		new Thread(new CoAPAckTimer(5, 2000, message.getMessageID(), message.getSerialPacket(), _connectionManager)).run();
-    	_connectionManager.send(message.getSerialPacket());
+		new CoAPAckTimer(5, 2000, message.getMessageID(), message.getSerialPacket(), _connectionManager).run();
+    	//_connectionManager.send(message.getSerialPacket());
 	}
 
 
@@ -183,12 +299,15 @@ public class ControlPanel extends JPanel implements ConsoleCommandListener, Seri
 			_outputTop.append(collectedFrame.toString()+ "\n");
 			SFrame f = (SFrame)collectedFrame;
 			if(f._statusType.startsWith("9")){
-				
+				//Root neighbor entry
 				NeighborEntry e = f.parseNeighbors();
-				//if(e.used==1)
-				//_outputBot.append(e.getiid64Hex()+"\n");
-			}else if(!SFrame.ROOT_SET&&f._statusType.startsWith("1")){
+			}else if(!SFrame.ROOT_SET&&f._statusType.startsWith("1"))
+			{
 				f.getRootPrefix(_connectionManager);
+			}
+			else if(!SFrame.ROOT_SET&& f._statusType.startsWith("0")){
+				_connectionManager.showGraph();
+				setRoot();
 			}
 		//Application Layer level messages
 		}else if(collectedFrame.getType().equals("Data")){
@@ -196,19 +315,53 @@ public class ControlPanel extends JPanel implements ConsoleCommandListener, Seri
 			
 			//if CoAP message
 			if(((DFrame)collectedFrame).isCoAPMessage()){
-				CoapMessage m = ((DFrame)collectedFrame).getCoAPMessage(); 
+				
+				//byte[] payloads = {'2'};
+				// CoAPBuilder builders = new CoAPBuilder(_connectionManager.getGraph(),_connectionManager.getNetworkModel(), "PUT", "l", ((DFrame)collectedFrame).getSrcMoteId64Hex(), payloads,0);
+				//_connectionManager.send(builders.getSerialPacket());
+				
+				
+				
+				CoapMessage m = ((DFrame)collectedFrame).getCoAPMessage();
+				_outputBot.append("CoAP("+m.getMessageID()+"): ");
 				byte[] b = m.getPayload();
 				char c = (char)(b[0]&0xFF);
 				
-				if(c=='n'){
+				if(c=='n'){	
 					NeighborEntry e = new NeighborEntry(b);
 					String s = e.getiid64Hex();
-					_outputBot.append(e.row + " " + s +"\n");
-				}else if(c=='u'){
-					_outputBot.append("mote table updated" + "\n");					
+					if(s==null){
+						s = "{empty}";
+					}
+					_outputBot.append("'n', Neighbor entry from " + ((DFrame)collectedFrame).getSrcMoteId64Hex() + ", row: " + e.row + ", reporting neighbor:" + s +"\n");
+				}else if(c=='a'){
+					NeighborEntry e = new NeighborEntry(b);
+					_outputBot.append("'a' message, mote table updated" + "\n");
+					byte[] payload = new byte[1];
+					payload[0] = e.row;
+					
+					CoAPBuilder builder = new CoAPBuilder(_connectionManager.getGraph(),_connectionManager.getNetworkModel(), "PUT", "a", ((DFrame)collectedFrame).getSrcMoteId64Hex(), payload,0);
+					
+					
+					_connectionManager.send(builder.getSerialPacket());
+					
+					
+					_outputBot.append("ack replied to resource 'a' with payload ["+payload[0]+"]\n");
+					
+				}else if(c=='r'){
+					_outputBot.append("'r' message, notification of mote removal" + "\n");
+					NeighborEntry e = new NeighborEntry(b);
+					_connectionManager.send(new CoAPBuilder(_connectionManager.getGraph(),_connectionManager.getNetworkModel(), "PUT", "r", ((DFrame)collectedFrame).getSrcMoteId64Hex(), new byte[]{e.row},0).getSerialPacket());
 				}else{
-					_outputBot.append(m.getPayloadAsAscii()+ "\n");
+					_outputBot.append("Raw payload:  " + 	m.getPayloadAsAscii()+ "\n");
+
+					String s = "";
+					for(int i = 0 ; i<m.getPayload().length;i++){
+					s=s+ " " +	Integer.toBinaryString((	m.getPayload()[i]&0xFF));
+					}
+					_outputBot.append("binary "+ s + "\n");
 				}
+				_outputBot.append("\n");
 			}
 			
 		}else if(collectedFrame.getType().equals("Request")){
@@ -220,7 +373,9 @@ public class ControlPanel extends JPanel implements ConsoleCommandListener, Seri
 	}
 	
 	
-	
+	public static String byteToString(byte b){
+		return String.format("%8s", Integer.toBinaryString(b&0xFF)).replace(' ', '0');
+	}
 	/*
 	private void customMessage() {
 		JFrame f = new JFrame();

@@ -10,6 +10,10 @@ public class IFrame extends Frame {
 		public IFrame(ArrayList<Byte> data) {
 			_data = data;
 			setType("Info");
+			if(data ==null)
+			{
+			return;
+			}
 			setData(data);
 			_address = Integer.toHexString(data.get(1)&0xFF) + Integer.toHexString(data.get(2)&0xFF);
 			
@@ -20,6 +24,10 @@ public class IFrame extends Frame {
 		@Override
 		public String toString(){
 			String s = _address + " Info Frame: ";
+			if(_data ==null)
+			{
+			return s;
+			}
 			s = s+ " Code: " + Integer.toHexString(_data.get(4));
 			return s;
 		}

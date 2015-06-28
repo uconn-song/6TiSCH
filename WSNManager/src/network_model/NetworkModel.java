@@ -9,6 +9,7 @@ import serial.Frame;
 import serial.RootNeighborFrame;
 import serial.SFrame;
 import serial.SerialListener;
+import stack.CoapMessage;
 
 /**
  * Model of the network.
@@ -18,6 +19,9 @@ public class NetworkModel implements SerialListener {
 	private String _rootid64Hex;
 	private boolean _rootset = false;
 
+	
+	
+
 	/**
 	 * Method called once we have toggled root
 	 * @param iidroot
@@ -25,6 +29,7 @@ public class NetworkModel implements SerialListener {
 	public void setRoot(String iidroot){
 		_rootset =true;
 		_rootid64Hex = iidroot;
+		
 	}
 	
 	// observer model collection
@@ -44,7 +49,7 @@ public class NetworkModel implements SerialListener {
 			//make sure the neighbor exists otherwise create a mote for it
 			if(neighbor!=null){
 			}else{
-				System.out.println("adding neighbor mote to network table. Mote:" + id64hex + ", neighbor:" + id64HexNeighbor);
+				//System.out.println("adding neighbor mote to network table. Mote:" + id64hex + ", neighbor:" + id64HexNeighbor);
 				addNewMote(id64HexNeighbor);
 				neighbor = _motes.get(id64HexNeighbor);
 			}
@@ -60,6 +65,7 @@ public class NetworkModel implements SerialListener {
 			notifyAddEdge(id64hex, id64HexNeighbor);
 			//add neighbor mote to the internal neighbor table
 			base.updateTable(id64HexNeighbor, entry);
+			neighbor.setDagRank(entry.DAGrank);
 			
 	}
 
@@ -71,7 +77,7 @@ public class NetworkModel implements SerialListener {
 	 * method to create a new mote
 	 */
 	public void addNewMote(String id64hex) {
-		_motes.put(id64hex, new Mote(id64hex));
+		_motes.put(id64hex, new Mote(id64hex,this));
 		notifyObserversNewMote(id64hex);
 	}
 
@@ -81,6 +87,8 @@ public class NetworkModel implements SerialListener {
 	 * @param id64hex
 	 */
 	private void notifyObserversNewMote(String id64hex) {
+		
+		
 		for (int i = 0; i < _networkObservers.size(); i++) {
 			_networkObservers.get(i).newMoteNotification(id64hex);
 		}
@@ -141,23 +149,60 @@ public class NetworkModel implements SerialListener {
 			if(f.isCoAPMessage()){
 				//derive source id from the data frame
 				String sourceMote = f.getSrcMoteId64Hex();
+				
+				//source mote to send log of this message
+				Mote source = _motes.get(sourceMote);
+				CoapMessage message = f.getCoAPMessage();
 				byte[] coapPayload = f.getCoAPMessage().getPayload();
 				int flag = coapPayload[0]&0xFF;
-				if(flag==110)// 'n', then this is a neighbor entry
+				if(flag=='a'||flag=='n')// 'n', then this is a neighbor entry
 				{
 					NeighborEntry e = new NeighborEntry(coapPayload);
+					System.out.println("addNeighbor: " + sourceMote + " ->" +e.getiid64Hex() );
+					String messageToLog = "CoAP: Neighbor Update - Row: " + e.row + " "; 
 					//add neighbor if this row is used
 					if(e.used==1){
+						System.out.println("addNeighbor: " + sourceMote + " ->" +e.getiid64Hex() );
 						addNeighbor(sourceMote,e.getiid64Hex(),e);
+						messageToLog = messageToLog + " Neighbor Device: " + e.getiid64Hex();
+					}else{
+						messageToLog = messageToLog + " {Empty Row}";
 					}
+					source.addMessageToHistory(messageToLog);
+					
 				}else if (flag=='r'){ //'r'
 					
 					NeighborEntry e = new NeighborEntry(coapPayload);
 					String removedMote = e.getiid64Hex();
+					
 					//System.out.println("delete " +  removedMote);
 					//remove edges in both directions
+					try{
 					notifyDeleteNeighbor(sourceMote, removedMote );
+					}catch(Exception ex){
+						ex.printStackTrace();
+					}
+					try{
 					notifyDeleteNeighbor(removedMote, sourceMote );
+					}catch(Exception ex){
+						ex.printStackTrace();
+					}
+					try{
+					_motes.get(sourceMote).getNeighborTable().remove(removedMote);
+				}catch(Exception ex){
+					ex.printStackTrace();
+				}
+					try{
+					_motes.get(removedMote).getNeighborTable().remove(sourceMote);
+					}catch(Exception ex){
+						ex.printStackTrace();
+					}
+					//System.out.println("MOTE REMOVE COMPLETED");
+					
+				
+				}else{
+					String messageToLog = "CoAP: "+  message.getMessageType() + " { \n" + message.getPayloadAsAscii() + "\n}\n";
+					source.addMessageToHistory(messageToLog);
 				}
 			}
 		}else if(collectedFrame.getType().equals("RootNeighbor")){

@@ -46,8 +46,8 @@ public class NeighborEntry
         used=_data.get(5);
         
         //if not used forget about parsing the rest of this message
-        if(used ==0)
-        	return;
+//        if(used ==0)
+//        	return;
         
         parentPreference=_data.get(6);
         stableNeighbor=_data.get(7);
@@ -119,8 +119,8 @@ public class NeighborEntry
         used=_data[2]; //2
         
         //if not used forget about parsing the rest of this message
-        if(used ==0)
-        	return;
+//        if(used ==0)
+//        	return;
         
         parentPreference=_data[3]; //3
         stableNeighbor=_data[4]; //4

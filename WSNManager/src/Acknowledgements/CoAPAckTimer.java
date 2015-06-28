@@ -33,10 +33,8 @@ public class CoAPAckTimer implements Runnable, SerialListener {
 		_CoAPMessageID = CoAPMessageID;
 		_CoAPPacketBytes = CoAPPacketBytes;
 		_manager = manager;
-		//add this to the list of listeners to allow 
-		_manager.addComponentListeningOnSerial(_CoAPMessageID+"", this);
-		
-		
+	
+		//
 		
 	}
 	
@@ -45,16 +43,16 @@ public class CoAPAckTimer implements Runnable, SerialListener {
 	        public void run() {
 	        	if(_ackReceived){
 					_manager.removeComponentListeningOnSerial(_CoAPMessageID+"");
+					t.cancel();
 					return;
 				}
+	        	System.out.println("CoAP message not acknoweledged, retransmitting("+retryCount+"), " + _CoAPPacketBytes.length + " bytes transmitted");
+	        	_manager.send(_CoAPPacketBytes);
 	        	
-	        _manager.send(_CoAPPacketBytes);
-	        	System.out.println( retryCount);
 	        	retryCount++;
 				if(retryCount>_retryLimit){
-					System.out.format("Time's up!%n");
 					_manager.removeComponentListeningOnSerial(_CoAPMessageID+"");
-					System.out.println("Message failed to acknowledge after" + _retryLimit + " tries");
+					//System.out.println("Message failed to acknowledge after" + _retryLimit + " tries");
 		            t.cancel(); //Terminate the timer thread
 				}
 	            
@@ -63,15 +61,22 @@ public class CoAPAckTimer implements Runnable, SerialListener {
 	 
 	@Override
 	public void run() {	
-		t.scheduleAtFixedRate(new AckCheckTask(), 0, _retryPeriod);
+		System.out.println(_CoAPMessageID);
+			//add this to the list of listeners to allow 
+		_manager.addComponentListeningOnSerial(_CoAPMessageID+"", this);
+		t.scheduleAtFixedRate(new AckCheckTask(), 100, _retryPeriod);
 	}
 	
 	@Override
 	public void acceptFrame(Frame collectedFrame) {
+		if(!collectedFrame.getType().equals("Data")) return;
+		
 		if(((DFrame)collectedFrame).isCoAPMessage()){
 			CoapMessage m = ((DFrame)collectedFrame).getCoAPMessage(); 
+			System.out.println("Checking CoAP messageID for recieved message: " + m.getMessageID() + 
+					"\n\t against messageID to be acked: " + _CoAPMessageID);
 			if(m.getMessageID() == _CoAPMessageID){
-				System.out.println("ack received");
+				System.out.println("ack received, removing timer, stop retransmissions.");
 				_ackReceived=true;
 			}
 		}

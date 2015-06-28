@@ -4,6 +4,8 @@ import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
@@ -20,6 +22,13 @@ public class SerialThread extends Thread{
 	//HDLC assistant holds lower level functions for computing and checking crc conditions
 	private HDLCAssistant _HDLC = new HDLCAssistant();
 	
+	/**
+	 * testing 
+	 */
+	
+	ConcurrentLinkedQueue<byte[]> _outBuffer = new ConcurrentLinkedQueue<byte[]>();
+	/*****/
+	
 	//A packet can only be sent for a very short amount of time after a request
 	//frame has been received, so keep a buffer for the next packet to be sent.
 	//this will be checked when a request packet is found.
@@ -29,7 +38,7 @@ public class SerialThread extends Thread{
 	private ArrayList<Byte> _readBuffer = new ArrayList<Byte>();
 	
 	//A list of components to which serial messages will be sent, these components implement the interface SerialListener
-	private HashMap<String, SerialListener> _listeningComponents = new HashMap<String,SerialListener>();
+	private ConcurrentHashMap<String, SerialListener> _listeningComponents = new ConcurrentHashMap<String,SerialListener>();
 	
 	public SerialThread(SerialPort serial) {
 		serialPort = serial;
@@ -43,10 +52,13 @@ public class SerialThread extends Thread{
 	@Override
 	public void run(){
 		try {
+
+
 			//eat bytes from the serial stream until full packet detected. captureByte will then
 			//decode the frame. (Note that Bytes must be converted to unsigned bytes before printed
 			//http://stackoverflow.com/questions/19061544/bitwise-anding-with-0xff-is-important )
 	        while(alive){
+	        	
 	        	captureByte(serialPort.readBytes(1)[0]);
 	        }
 	        
@@ -84,6 +96,7 @@ public class SerialThread extends Thread{
 	//data.
 	private void captureByte(Byte b) throws UnsupportedEncodingException, Exception
 	{
+		
 		//Serial buffer size is no larger than 256 according to the
 		//firmware
 		if(_readBuffer.size()> 256) closeFrame();
@@ -97,6 +110,8 @@ public class SerialThread extends Thread{
 	
 	private void closeFrame() throws UnsupportedEncodingException, Exception {
 		try{
+
+
 		//build a frame from raw data
 		Frame collectedFrame = parseInputBuffer();
 		//metadata for debugging
@@ -107,13 +122,26 @@ public class SerialThread extends Thread{
 			//TODO:SEND FRAME TO UPPER LAYERS
 		}else{
 			//System.out.println(collectedFrame);
-			Iterator<SerialListener> it = _listeningComponents.values().iterator();
-			while(it.hasNext()){
-				it.next().acceptFrame(collectedFrame);
+			//SEND FRAME TO ALL SERIAL LISTENERS
+			//check if collected frame is CoAP
+				//if it is CoAP
+			/*if(collectedFrame.getType().equals("Data") && ((DFrame)collectedFrame).isCoAPMessage() ){
+				System.out.println("send to coap listener");
+				//check if there are any acks pending
+				//Check if this is a message response to a currently waiting coap ack message
+				//if it is dont propagate message further
+				//otherwise send to coap listeners
+	
+			}else{//this is a non CoAP message send to serial listeners
+				*/
+				Iterator<SerialListener> it = _listeningComponents.values().iterator();
+				while(it.hasNext()){
+					it.next().acceptFrame(collectedFrame);
+				//}
 			}
-			//TODO: SEND FRAME TO UPPER LAYERS
 		}
 		}catch(Exception e){
+			//bad frame drop it silently
 			System.out.println(e.getMessage());
 		}
 		_readBuffer = new ArrayList<Byte>();
@@ -143,10 +171,10 @@ public class SerialThread extends Thread{
 			case "N":
 				return new RootNeighborFrame(_readBuffer);
 			default:
-				System.out.println("Frame code "+ _readBuffer.get(0));
+				
 				
 				_readBuffer.clear();
-				throw(new Exception(type + " unsupported"));
+				throw new IllegalArgumentException("Serial Data Invalid");
 			}		
 	}
 	
@@ -157,7 +185,20 @@ public class SerialThread extends Thread{
 	 * called when the mote sends a "request" frame
 	 */
 	private void checkBuffer() {
-		if(!_writeBufferEmpty)
+		
+		try {
+			byte[] nextItem = _outBuffer.poll();
+			if(nextItem!=null)
+			serialPort.writeBytes(nextItem);
+		} catch (SerialPortException e) {
+			e.printStackTrace();
+		}
+		
+		
+		
+		
+		
+		/*if(!_writeBufferEmpty)
 		{
 			_writeBufferEmpty = true;
 			try {
@@ -166,7 +207,7 @@ public class SerialThread extends Thread{
 				_writeBufferLock.unlock();//unlock to prevent lock from being stuck in writing state
 				e.printStackTrace();
 			}
-		}
+		}*/
 	}
 
 
@@ -177,16 +218,29 @@ public class SerialThread extends Thread{
 	 */
 	public synchronized boolean sendToBuffer(byte[] frame) {
 		//since multiple threads could potentially write at the same time we need synchronization
-		
-		byte[] toBuffer = _HDLC.packageBytes(frame);
+		byte[] toBuffer;
+		try{
+			toBuffer = _HDLC.packageBytes(frame);
+		}catch(NullPointerException e)
+		{
+			System.out.println("Attempt to send empty message halted");
+			return false;
+		}
+		_outBuffer.add(toBuffer);
+		return true;
+		/*
 		_writeBufferLock.lock();
 		if(_writeBufferEmpty){
 			_writeBuffer = toBuffer;
 			_writeBufferEmpty = false;
 		_writeBufferLock.unlock();
 			return true;
+		}else{
+				System.out.println("Write buffer still full");
+			
 		}
 		_writeBufferLock.unlock();
 		return false;
+		*/
 	}
 }
